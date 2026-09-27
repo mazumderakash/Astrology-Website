@@ -1,0 +1,85 @@
+{
+  "age": "31Y 03M 12D",
+  "ascendant": {
+    "degree_in_sign": 20.084638997162784,
+    "dms": {
+      "degrees": 20,
+      "minutes": 5,
+      "seconds": 4.700389786023607
+    },
+    "full_degree": 230.08463899716278,
+    "nakshatra": "Jyeshtha",
+    "nakshatra_pada": 2,
+    "sign": "Scorpio"
+  },
+  "ayanamsha": {
+    "name": "Lahiri",
+    "value": null
+  },
+  "chart": {
+    "additional_info": {
+      "animal_sign": "Mongoose",
+      "calculation_basis": "Sidereal Moon/Sun positions with Lahiri ayanamsa for nakshatra and rasi derivation",
+      "ganam": "Manushya",
+      "nadi": "Antya",
+      "planet": "Sun"
+    },
+    "age": "31Y 03M 12D",
+    "ascendant": {
+      "degree_in_sign": 20.084638997162784,
+      "dms": {
+        "degrees": 20,
+        "minutes": 5,
+        "seconds": 4.700389786023607
+      },
+      "full_degree": 230.08463899716278,
+      "nakshatra": "Jyeshtha",
+      "nakshatra_pada": 2,
+      "sign": "Scorpio"
+    },
+    "ayanamsha": "Lahiri",
+    "chandra_rasi": {
+      "id": 10,
+      "lord": {
+        "name": "Saturn"
+      },
+      "name": "Capricorn"
+    },
+    "nakshatra": {
+      "id": 21,
+      "lord": {
+        "name": "Sun"
+      },
+      "name": "Uttara Ashadha",
+      "pada": 3
+    },
+    "soorya_rasi": {
+      "id": 3,
+      "lord": {
+        "name": "Mercury"
+      },
+      "name": "Gemini"
+    },
+    "zodiac": {
+      "id": 3,
+      "name": "Gemini"
+    }
+  },
+  "lagna": "Uttara Ashadha",
+  "panchang": {
+    "day": "Wednesday",
+    "karana": "Vishti",
+    "paksha": "Krishna",
+    "sunrise": "05:22:55",
+    "sunset": "19:20:05",
+    "tithi": "Tritiya",
+    "yoga": "Indra"
+  },
+  "subject": {
+    "chandra_rasi": "Capricorn",
+    "nakshatra": "Uttara Ashadha",
+    "nakshatra_pada": 3,
+    "soorya_rasi": "Gemini"
+  },
+  "success": true
+}

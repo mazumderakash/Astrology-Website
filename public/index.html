@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JyotishX — Local</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="#home" aria-label="JyotishX home">
+          <span class="brand-logo" aria-hidden="true">
+            <svg viewBox="0 0 120 120" role="img" aria-label="JyotishX logo">
+              <defs>
+                <linearGradient id="goldGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#fff1bd"/>
+                  <stop offset="18%" stop-color="#f9d66c"/>
+                  <stop offset="48%" stop-color="#d6a433"/>
+                  <stop offset="72%" stop-color="#f3d97b"/>
+                  <stop offset="100%" stop-color="#a86f0a"/>
+                </linearGradient>
+              </defs>
+              <circle cx="60" cy="60" r="54" fill="none" stroke="url(#goldGlow)" stroke-width="4"/>
+              <circle cx="60" cy="60" r="46" fill="none" stroke="rgba(255,205,94,0.28)" stroke-width="1.5"/>
+              <circle cx="34" cy="34" r="6" fill="#f9d66c" opacity="0.9"/>
+              <circle cx="82" cy="31" r="5" fill="#f9d66c" opacity="0.75"/>
+              <circle cx="88" cy="68" r="6" fill="#f9d66c" opacity="0.8"/>
+              <path d="M37 41c6-12 18-18 30-18 14 0 26 8 31 20" fill="none" stroke="url(#goldGlow)" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+              <path d="M30 84c16 8 38 10 60 0" fill="none" stroke="url(#goldGlow)" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+              <text x="60" y="72" text-anchor="middle" font-size="20" font-weight="700" font-family="Georgia, 'Times New Roman', serif" fill="url(#goldGlow)" letter-spacing="1">JX</text>
+            </svg>
+          </span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="#chart">Chart Preparation</a></li>
+            <li class="nav-item"><a class="nav-link" href="#panchang">Daily Panchang</a></li>
+            <li class="nav-item"><a class="nav-link" href="#consult">Consultation</a></li>
+            <li class="nav-item"><a class="nav-link" href="#login">Login</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <header id="home" class="hero text-center text-white py-5 main-section">
+      <div class="container hero-inner">
+        <div class="hero-badge">Ancient Wisdom • Precise Calculations • Deeper Insights</div>
+        <h1 class="display-5 hero-title">JyotishX</h1>
+        <p class="lead">JyotishX is a modern Vedic astrology platform designed to bring traditional Jyotisha knowledge and intelligent astrological analysis together in one place.</p>
+      </div>
+    </header>
+
+    <main class="container my-5">
+      <section id="horoscope" class="mb-5 main-section">
+        <h2>Get Your Daily Horoscope</h2>
+        <div class="row g-3 align-items-center mt-3">
+          <div class="col-md-4">
+            <select id="zodiacSelect" class="form-select">
+              <option value="aries">♈ Aries</option>
+              <option value="taurus">♉ Taurus</option>
+              <option value="gemini">♊ Gemini</option>
+              <option value="cancer">♋ Cancer</option>
+              <option value="leo">♌ Leo</option>
+              <option value="virgo">♍ Virgo</option>
+              <option value="libra">♎ Libra</option>
+              <option value="scorpio">♏ Scorpio</option>
+              <option value="sagittarius">♐ Sagittarius</option>
+              <option value="capricorn">♑ Capricorn</option>
+              <option value="aquarius">♒ Aquarius</option>
+              <option value="pisces">♓ Pisces</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button id="getBtn" class="btn btn-primary">Get Horoscope</button>
+          </div>
+          <div class="col-md-6">
+            <div id="result" class="alert alert-secondary">Select a sign and click "Get Horoscope".</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="chart" class="mb-5 main-section">
+        <div id="chartBreadcrumb" class="small text-muted mb-2">Home / Chart</div>
+        <h2>Chart Preparation</h2>
+        <p class="text-muted">Enter birth details to prepare a natal chart using the live kundli API.</p>
+        <form id="chartForm" class="row g-3 mt-2">
+          <div class="col-md-3"><input id="chartName" class="form-control" placeholder="Name" /></div>
+          <div class="col-md-3"><input id="chartDob" type="date" class="form-control" /></div>
+          <div class="col-md-2"><input id="chartTob" type="time" class="form-control" /></div>
+          <div class="col-md-3"><input id="chartPlace" class="form-control" placeholder="Place name (e.g. New Delhi)" /></div>
+          <div class="col-md-2"><input id="chartTz" class="form-control" placeholder="Timezone (e.g. 5.5)" /></div>
+          <div class="col-md-2"><input id="chartLat" class="form-control" placeholder="Latitude (optional)" /></div>
+          <div class="col-md-2"><input id="chartLon" class="form-control" placeholder="Longitude (optional)" /></div>
+          <div class="col-12"><button class="btn btn-primary" type="submit">Prepare Chart</button></div>
+        </form>
+
+          <div id="chartResult" class="mt-4 alert alert-secondary d-none"></div>
+          <div id="birthDetails" class="mt-3 d-none"></div>
+          <div id="chartSummary" class="chart-summary d-none mt-4"></div>
+
+          <!-- North Indian birth chart rendering -->
+          <div id="northChartSection" class="mt-4 d-none">
+            <h3>Birth Chart (North Indian Style)</h3>
+            <div id="northChartContainer" class="border p-2" style="min-height:200px; background:transparent"></div>
+          </div>
+
+          <div id="planets" class="mt-4 d-none">
+            <h3>Planets</h3>
+            <div class="table-responsive mt-3">
+              <table class="table table-dark planets-table">
+                <thead>
+                  <tr>
+                    <th>Planets</th>
+                    <th>Sign</th>
+                    <th>Degree</th>
+                    <th>Nakshatra</th>
+                    <th>Pada</th>
+                    <th>Nakshatra Lord</th>
+                  </tr>
+                </thead>
+                <tbody id="planetsTableBody">
+                  <tr>
+                    <td colspan="6" class="text-center text-muted">Prepare a chart to load planet details.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="vimshottariDasha" class="mt-4 d-none">
+            <h3>Vimshottari Dasha Periods</h3>
+            <div class="table-responsive mt-3">
+              <table class="table table-dark planets-table">
+                <thead>
+                  <tr>
+                    <th>Period</th>
+                    <th>Start</th>
+                    <th>End</th>
+                  </tr>
+                </thead>
+                <tbody id="dashaTableBody">
+                  <tr>
+                    <td colspan="3" class="text-center text-muted">Prepare a chart to load dasha periods.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="houseInterpretation" class="mt-4 d-none">
+            <h3>House Interpretation</h3>
+            <div class="table-responsive mt-3">
+              <table class="table table-dark planets-table">
+                <thead>
+                  <tr>
+                    <th>House Number</th>
+                    <th>Planets Posited</th>
+                  </tr>
+                </thead>
+                <tbody id="houseInterpretationTableBody">
+                  <tr>
+                    <td colspan="2" class="text-center text-muted">Prepare a chart to load house interpretation.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+      </section>
+
+      <section id="panchang" class="mb-5 main-section">
+        <h2>Daily Panchang</h2>
+        <p>Quick panchang details for today (demo):</p>
+        <ul>
+          <li>Tithi: Shukla Paksha</li>
+          <li>Nakshatra: Rohini</li>
+          <li>Good for: Auspicious events</li>
+        </ul>
+      </section>
+
+      <section id="consult" class="mb-5 main-section">
+        <h2>Consultation</h2>
+        <p>Book a consultation with an astrologer.</p>
+        <form id="consultForm" class="row g-3 mt-2">
+          <div class="col-md-6"><input id="consultName" class="form-control" placeholder="Your Name" /></div>
+          <div class="col-md-6"><input id="consultEmail" class="form-control" placeholder="Email" /></div>
+          <div class="col-md-6"><input id="consultPhone" class="form-control" placeholder="Phone Number" /></div>
+          <div class="col-md-6">
+            <select id="consultType" class="form-select">
+              <option>General Guidance</option>
+              <option>Career</option>
+              <option>Love & Marriage</option>
+              <option>Health</option>
+              <option>Business</option>
+            </select>
+          </div>
+          <div class="col-12"><textarea id="consultMessage" class="form-control" rows="3" placeholder="Brief details"></textarea></div>
+          <div class="col-12"><button class="btn btn-primary" type="submit">Request Consultation</button></div>
+        </form>
+        <div id="consultResult" class="mt-3 alert alert-secondary d-none"></div>
+      </section>
+
+      <section id="login" class="mb-5 main-section">
+        <div class="auth-box mx-auto" style="max-width: 700px;">
+          <div class="d-flex justify-content-center mb-4 auth-toggle-wrap">
+            <button type="button" class="btn auth-toggle active" data-auth-mode="login">Login</button>
+            <button type="button" class="btn auth-toggle" data-auth-mode="register">Register</button>
+          </div>
+
+          <div id="loginFormBlock" class="auth-form-block">
+            <h2>Login</h2>
+            <p>Welcome back. Sign in with your mobile number and OTP.</p>
+            <form id="loginForm" class="row g-3 mt-2">
+              <div class="col-12">
+                <div class="input-group">
+                  <input id="loginPhone" class="form-control" placeholder="Phone Number" type="tel" />
+                  <button class="btn btn-outline-primary" type="button" data-send-otp="login">Send OTP</button>
+                </div>
+              </div>
+              <div class="col-12">
+                <input id="loginOtp" class="form-control" placeholder="Enter OTP" type="text" maxlength="6" />
+              </div>
+              <div class="col-12"><button class="btn btn-primary" type="submit">Login</button></div>
+            </form>
+          </div>
+
+          <div id="registerFormBlock" class="auth-form-block d-none">
+            <h2>Register</h2>
+            <p>Create an account with your mobile number and OTP verification.</p>
+            <form id="registerForm" class="row g-3 mt-2">
+              <div class="col-md-6"><input id="registerName" class="form-control" placeholder="Full Name" /></div>
+              <div class="col-md-6"><input id="registerDob" class="form-control" placeholder="Date of Birth" type="date" /></div>
+              <div class="col-12">
+                <div class="input-group">
+                  <input id="registerPhone" class="form-control" placeholder="Phone Number" type="tel" />
+                  <button class="btn btn-outline-primary" type="button" data-send-otp="register">Send OTP</button>
+                </div>
+              </div>
+              <div class="col-12">
+                <input id="registerOtp" class="form-control" placeholder="Enter OTP" type="text" maxlength="6" />
+              </div>
+              <div class="col-12"><button class="btn btn-primary" type="submit">Verify & Create Account</button></div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section id="zodiacs">
+        <h2>Zodiac Quick Guide</h2>
+        <div class="row mt-3">
+          <!-- repeat simple cards -->
+          <div class="col-md-3 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">Aries ♈</h5>
+                <p class="card-text">Energetic, courageous, and direct.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">Taurus ♉</h5>
+                <p class="card-text">Steady, patient, and practical.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">Gemini ♊</h5>
+                <p class="card-text">Curious, adaptable, and communicative.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">Cancer ♋</h5>
+                <p class="card-text">Nurturing, intuitive, and protective.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-md-3 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">Leo ♌</h5>
+                <p class="card-text">Warm, generous, and charismatic.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">Virgo ♍</h5>
+                <p class="card-text">Analytical, helpful, and precise.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">Libra ♎</h5>
+                <p class="card-text">Balanced, social, and fair-minded.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">Scorpio ♏</h5>
+                <p class="card-text">Passionate, resourceful, and deep.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-md-3 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">Sagittarius ♐</h5>
+                <p class="card-text">Optimistic, curious, and freedom-loving.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">Capricorn ♑</h5>
+                <p class="card-text">Ambitious, disciplined, and practical.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">Aquarius ♒</h5>
+                <p class="card-text">Inventive, independent, and humane.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">Pisces ♓</h5>
+                <p class="card-text">Compassionate, artistic, and intuitive.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="text-center py-4">
+      <small>Local demo — not a professional astrology service.</small>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

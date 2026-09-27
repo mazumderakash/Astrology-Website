@@ -1,0 +1,12 @@
+{
+  "name": "astrology-website",
+  "version": "1.0.0",
+  "description": "Local astrology website with horoscope generator",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
