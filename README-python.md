@@ -1,6 +1,6 @@
-# JyotishX — Python (Flask) Run Instructions
+# JyotishLab — Python (Flask) Run Instructions
 
-This project includes a Python Flask server that serves the JyotishX UI and API.
+This project includes a Python Flask server that serves the JyotishLab UI and API.
 
 Install and run (Windows PowerShell):
 

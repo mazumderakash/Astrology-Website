@@ -1,18 +1,27 @@
 from flask import Flask, jsonify, request
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from email.message import EmailMessage
+from email.utils import parseaddr
 import os
 import random
 import sqlite3
+import smtplib
+import ssl
 import time
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
+from zoneinfo import ZoneInfo
 
 import requests
 from dotenv import load_dotenv
+from timezonefinder import TimezoneFinder
+from yogi_calculations import calculate_yogi_points
 
 app = Flask(__name__, static_folder='public', static_url_path='')
 BASE_DIR = os.path.dirname(__file__)
 DB_PATH = os.path.join(BASE_DIR, 'jyotishx.db')
 load_dotenv(os.path.join(BASE_DIR, '.env'))
+load_dotenv(os.path.join(BASE_DIR, '.env.geoapify'))
 PORT = int(os.getenv('PORT', '5000'))
 
 
@@ -31,6 +40,104 @@ def load_backend_env():
 
 
 load_backend_env()
+
+_timezone_finder = None
+
+
+def get_timezone_finder():
+    global _timezone_finder
+    if _timezone_finder is None:
+        _timezone_finder = TimezoneFinder()
+    return _timezone_finder
+
+
+def geoapify_geocode(query, mode='search', limit=1):
+    api_key = (os.getenv('GEOAPIFY_API_KEY') or '').strip()
+    if not api_key:
+        return None
+
+    endpoint = 'autocomplete' if mode == 'autocomplete' else 'search'
+    response = requests.get(
+        f'https://api.geoapify.com/v1/geocode/{endpoint}',
+        params={'text': query, 'format': 'json', 'limit': limit, 'apiKey': api_key},
+        timeout=15,
+    )
+    response.raise_for_status()
+    data = response.json()
+    results = data.get('results') if isinstance(data, dict) else []
+    return results if isinstance(results, list) else []
+
+
+def serialize_geoapify_candidate(item, fallback_query=''):
+    timezone = item.get('timezone') if isinstance(item.get('timezone'), dict) else {}
+    rank = item.get('rank') if isinstance(item.get('rank'), dict) else {}
+    return {
+        'place': item.get('formatted') or item.get('address_line1') or fallback_query,
+        'latitude': item.get('lat'),
+        'longitude': item.get('lon'),
+        'city': item.get('city') or item.get('town') or item.get('village'),
+        'state': item.get('state'),
+        'country': item.get('country'),
+        'timezoneId': timezone.get('name'),
+        'confidence': rank.get('confidence'),
+        'confidenceCityLevel': rank.get('confidence_city_level'),
+        'matchType': rank.get('match_type'),
+    }
+
+COMBUSTION_LIMITS = {
+    'sun': (None, None),
+    'moon': (12, None),
+    'mars': (17, 17),
+    'mercury': (14, 12),
+    'jupiter': (11, 11),
+    'venus': (10, 8),
+    'saturn': (15, 15),
+    'rahu': (None, None),
+    'ketu': (None, None),
+}
+
+
+def calculate_combust_planets(planets, longitudes):
+    sun_longitude = longitudes.get('Sun')
+    if sun_longitude is None:
+        sun_data = planets.get('Sun') if isinstance(planets, dict) else None
+        sun_longitude = sun_data.get('fullDegree') if isinstance(sun_data, dict) else None
+    try:
+        sun_longitude = float(sun_longitude) % 360
+    except (TypeError, ValueError):
+        return set()
+    if sun_longitude != sun_longitude:
+        return set()
+
+    combust_planets = set()
+    for planet_name, (direct_limit, retrograde_limit) in COMBUSTION_LIMITS.items():
+        limit = direct_limit
+        if limit is None:
+            continue
+        planet_data = planets.get(planet_name.title()) if isinstance(planets, dict) else None
+        if not isinstance(planet_data, dict):
+            continue
+        is_retrograde = str(planet_data.get('isRetro', '')).strip().lower() in {'true', '1', 'yes'}
+        if is_retrograde:
+            limit = retrograde_limit
+        if limit is None:
+            continue
+
+        longitude = longitudes.get(planet_name.title())
+        if longitude is None:
+            longitude = planet_data.get('fullDegree')
+        try:
+            longitude = float(longitude) % 360
+        except (TypeError, ValueError):
+            continue
+        if longitude != longitude:
+            continue
+
+        angular_separation = abs((sun_longitude - longitude + 180) % 360 - 180)
+        if angular_separation <= limit:
+            combust_planets.add(planet_name)
+
+    return combust_planets
 
 
 def post_json_with_retry(url, payload, api_key, retries=3, timeout=30):
@@ -218,6 +325,17 @@ def resolve_place_to_coordinates(place_name):
     if not place_name:
         raise ValueError('Place name is required')
 
+    geoapify_key = (os.getenv('GEOAPIFY_API_KEY') or '').strip()
+    if geoapify_key:
+        results = geoapify_geocode(place_name, limit=1) or []
+        if results:
+            first = results[0]
+            latitude = first.get('lat')
+            longitude = first.get('lon')
+            if latitude is not None and longitude is not None:
+                return float(latitude), float(longitude), first.get('formatted') or place_name
+        raise ValueError('Geoapify could not find that birthplace. Please refine the place name.')
+
     api_key = (os.getenv('GOOGLE_MAPS_API_KEY') or os.getenv('GOOGLE_API_KEY') or '').strip()
     if api_key:
         response = requests.get(
@@ -243,7 +361,7 @@ def resolve_place_to_coordinates(place_name):
     nominatim_response = requests.get(
         'https://nominatim.openstreetmap.org/search',
         params={'q': place_name, 'format': 'jsonv2', 'limit': 1},
-        headers={'User-Agent': 'JyotishX/1.0'},
+        headers={'User-Agent': 'JyotishLab/1.0'},
         timeout=20,
     )
     nominatim_response.raise_for_status()
@@ -258,6 +376,148 @@ def resolve_place_to_coordinates(place_name):
         raise ValueError('Place found, but coordinates were not returned by the lookup service.')
 
     return float(lat), float(lon), first.get('display_name') or place_name
+
+
+def resolve_birthplace_details(place_name, birth_date, birth_time, confirm_place=False):
+    try:
+        date_obj = datetime.strptime(birth_date, '%Y-%m-%d').date()
+        time_obj = datetime.strptime(birth_time, '%H:%M').time()
+    except ValueError as exc:
+        raise ValueError('Birth date or time is invalid.') from exc
+
+    geoapify_results = geoapify_geocode(place_name, mode='search', limit=5)
+    candidates = []
+    if geoapify_results:
+        candidates = [
+            serialize_geoapify_candidate(item, place_name)
+            for item in geoapify_results
+            if isinstance(item, dict) and item.get('lat') is not None and item.get('lon') is not None
+        ]
+        if not candidates:
+            raise ValueError('Geoapify could not find that birthplace. Please refine the place name.')
+
+        best = candidates[0]
+        best_confidence = float(best.get('confidence') or 0)
+        best_city_confidence = float(best.get('confidenceCityLevel') or 0)
+        best_identity = tuple(str(best.get(key) or '').strip().casefold() for key in ('city', 'state', 'country'))
+        equally_ranked_identities = {
+            tuple(str(candidate.get(key) or '').strip().casefold() for key in ('city', 'state', 'country'))
+            for candidate in candidates
+            if float(candidate.get('confidence') or 0) >= best_confidence - 0.05
+        }
+        confident_match = (
+            best.get('matchType') == 'full_match'
+            and best_confidence >= 0.85
+            and best_city_confidence >= 0.85
+            and len(equally_ranked_identities - {('', '', '')}) == 1
+            and best_identity != ('', '', '')
+        )
+        if not confirm_place and not confident_match:
+            return {
+                'selection_required': True,
+                'candidates': candidates,
+            }
+
+        normalized_query = place_name.strip().casefold()
+        selected = next(
+            (candidate for candidate in candidates if candidate['place'].strip().casefold() == normalized_query),
+            best,
+        )
+        latitude = float(selected['latitude'])
+        longitude = float(selected['longitude'])
+        resolved_place = selected['place']
+        timezone_name = selected.get('timezoneId')
+        city = selected.get('city')
+        state = selected.get('state')
+        country = selected.get('country')
+    else:
+        latitude, longitude, resolved_place = resolve_place_to_coordinates(place_name)
+        timezone_name = None
+        city = state = country = None
+
+    timezone_name = timezone_name or get_timezone_finder().timezone_at(lng=longitude, lat=latitude)
+    if not timezone_name:
+        raise ValueError('Could not determine the timezone for that birthplace. Please refine the place name.')
+
+    try:
+        local_naive = datetime.combine(date_obj, time_obj)
+        timezone_info = ZoneInfo(timezone_name)
+        local_birth_time = local_naive.replace(tzinfo=timezone_info)
+        utc_offset = local_birth_time.utcoffset()
+        dst_offset = local_birth_time.dst() or timedelta(0)
+        utc_birth_time = local_birth_time.astimezone(dt_timezone.utc)
+    except Exception as exc:
+        raise RuntimeError('Could not calculate the local timezone for that birth date.') from exc
+    if utc_offset is None:
+        raise RuntimeError('Could not calculate the local timezone for that birth date.')
+    if utc_birth_time.astimezone(timezone_info).replace(tzinfo=None) != local_naive:
+        raise ValueError('That local birth time does not exist because of a daylight-saving clock change.')
+
+    utc_offset_minutes = int(round(utc_offset.total_seconds() / 60))
+    dst_offset_minutes = int(round(dst_offset.total_seconds() / 60))
+    birth_place = resolved_place or place_name
+    city = city or birth_place
+    utc_birth_time_text = utc_birth_time.isoformat().replace('+00:00', 'Z')
+
+    return {
+        'place': birth_place,
+        'latitude': latitude,
+        'longitude': longitude,
+        'timezone': round(utc_offset.total_seconds() / 3600, 6),
+        'timezone_name': timezone_name,
+        'birthDate': date_obj.isoformat(),
+        'birthTime': time_obj.strftime('%H:%M'),
+        'birthPlace': birth_place,
+        'city': city,
+        'state': state,
+        'country': country,
+        'timezoneId': timezone_name,
+        'utcOffsetMinutes': utc_offset_minutes,
+        'dstOffsetMinutes': dst_offset_minutes,
+        'utcBirthTime': utc_birth_time_text,
+    }
+
+
+@app.route('/api/place-autocomplete', methods=['GET'])
+def place_autocomplete_api():
+    query = (request.args.get('text') or '').strip()
+    if len(query) < 3:
+        return jsonify({'success': True, 'results': []})
+
+    if not (os.getenv('GEOAPIFY_API_KEY') or '').strip():
+        return jsonify({'success': False, 'error': 'Geoapify is not configured on the server.'}), 500
+
+    try:
+        provider_results = geoapify_geocode(query, mode='autocomplete', limit=6) or []
+        results = [
+            serialize_geoapify_candidate(item, query)
+            for item in provider_results
+            if isinstance(item, dict) and item.get('lat') is not None and item.get('lon') is not None
+        ]
+        return jsonify({'success': True, 'results': results})
+    except requests.RequestException as exc:
+        return jsonify({'success': False, 'error': f'Geoapify autocomplete failed: {str(exc)}'}), 502
+    except ValueError:
+        return jsonify({'success': False, 'error': 'Geoapify returned an invalid response.'}), 502
+
+
+@app.route('/api/resolve-place', methods=['POST'])
+def resolve_birthplace_api():
+    payload = request.get_json(silent=True) or {}
+    place_name = (payload.get('place') or '').strip()
+    dob = (payload.get('dob') or '').strip()
+    tob = (payload.get('tob') or '').strip()
+    confirm_place = payload.get('confirm_place') is True
+    if not place_name or not dob or not tob:
+        return jsonify({'success': False, 'error': 'Place, birth date, and birth time are required.'}), 400
+
+    try:
+        details = resolve_birthplace_details(place_name, dob, tob, confirm_place=confirm_place)
+        return jsonify({'success': True, **details})
+    except ValueError as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 400
+    except (RuntimeError, requests.RequestException) as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 502
 
 
 @app.route('/api/horoscope')
@@ -408,7 +668,7 @@ def chart_api():
                 return iso_dt
 
         panchang_summary = {
-            'day': panchang_output.get('vaara') if isinstance(panchang_output, dict) else None,
+            'day': date_obj.strftime('%A'),
             'tithi': (tithi_list[0].get('name') if isinstance(tithi_list, list) and tithi_list else None),
             'paksha': (tithi_list[0].get('paksha') if isinstance(tithi_list, list) and tithi_list else None),
             'karana': (karana_list[0].get('name') if isinstance(karana_list, list) and karana_list else None),
@@ -419,6 +679,7 @@ def chart_api():
 
         # Try to fetch ascendant details from Navamsha chart endpoint
         ascendant_summary = None
+        chart_structure = None
         try:
             chart_response = post_json_with_retry(
                 'https://api.navamsha.in/api/v1/astrology/chart',
@@ -430,6 +691,8 @@ def chart_api():
             chart_data = chart_response.json()
             chart_output = chart_data.get('output') if isinstance(chart_data, dict) else chart_data
             chart_obj = chart_output.get('chart') if isinstance(chart_output, dict) else {}
+            if isinstance(chart_obj, dict) and isinstance(chart_obj.get('houses'), dict):
+                chart_structure = chart_obj
             asc = chart_obj.get('ascendant') if isinstance(chart_obj, dict) else None
             if isinstance(asc, dict):
                 ascendant_summary = {
@@ -578,6 +841,7 @@ def chart_api():
         return jsonify({
             'success': True,
             'chart': output,
+            'chart_structure': chart_structure,
             'ascendant': ascendant_summary,
             'panchang': panchang_summary,
             'lagna': lagna,
@@ -595,6 +859,188 @@ def chart_api():
         })
     except requests.RequestException as exc:
         return jsonify({'success': False, 'error': f'Chart API request failed: {str(exc)}'}), 502
+
+
+@app.route('/api/daily-panchang', methods=['GET', 'POST'])
+def daily_panchang_api():
+    payload = request.get_json(silent=True) or {}
+    place_name = (payload.get('place') or 'Kolkata, West Bengal, India').strip()
+    local_now = datetime.now(ZoneInfo('Asia/Kolkata'))
+    date_text = (payload.get('date') or local_now.date().isoformat()).strip()
+    time_text = (payload.get('time') or '12:00').strip()
+
+    try:
+        date_obj = datetime.strptime(date_text, '%Y-%m-%d').date()
+        time_obj = datetime.strptime(time_text, '%H:%M').time()
+        place_details = resolve_birthplace_details(
+            place_name,
+            date_text,
+            time_text,
+            confirm_place=payload.get('confirm_place') is True,
+        )
+    except ValueError as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 400
+    except (RuntimeError, requests.RequestException) as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 502
+
+    if place_details.get('selection_required'):
+        return jsonify({
+            'success': False,
+            'selection_required': True,
+            'error': 'Choose a matching location from the suggestions to continue.',
+            'candidates': place_details.get('candidates', []),
+        }), 400
+
+    api_key = (
+        os.getenv('NAVAMSHA_API_KEY') or
+        os.getenv('VDA_API_KEY') or
+        os.getenv('FREE_ASTRO_API_KEY') or
+        os.getenv('FREEASTRO_API_KEY') or
+        ''
+    ).strip()
+    if not api_key:
+        return jsonify({'success': False, 'error': 'No Navamsha API key is configured.'}), 500
+
+    location = {
+        'name': place_details.get('place') or place_name,
+        'latitude': place_details['latitude'],
+        'longitude': place_details['longitude'],
+        'timezone': place_details['timezone'],
+        'timezoneId': place_details['timezoneId'],
+        'utcOffsetMinutes': place_details['utcOffsetMinutes'],
+        'referenceTime': time_obj.strftime('%H:%M'),
+    }
+    request_payload = {
+        'year': date_obj.year,
+        'month': date_obj.month,
+        'date': date_obj.day,
+        'hours': time_obj.hour,
+        'minutes': time_obj.minute,
+        'seconds': 0,
+        'latitude': location['latitude'],
+        'longitude': location['longitude'],
+        'timezone': location['timezone'],
+        'settings': {},
+    }
+    endpoints = (
+        ('tithi', 'Tithi'),
+        ('nakshatra', 'Nakshatra'),
+        ('yoga', 'Yoga'),
+        ('karana', 'Karana'),
+        ('vara', 'Vara'),
+        ('sun-times', 'Sun Times'),
+        ('moon-times', 'Moon Times'),
+        ('inauspicious-periods', 'Inauspicious Periods'),
+        ('choghadiya', 'Choghadiya'),
+        ('abhijit-muhurat', 'Abhijit Muhurat'),
+        ('brahma-muhurta', 'Brahma Muhurta'),
+        ('amrit-kaal', 'Amrit Kaal'),
+        ('tara-bala', 'Tara Bala'),
+        ('disha-shool', 'Disha Shool'),
+        ('ritu', 'Ritu'),
+    )
+
+    def fetch_endpoint(endpoint):
+        try:
+            response = post_json_with_retry(
+                f'https://api.navamsha.in/api/v1/panchang/{endpoint}',
+                request_payload,
+                api_key,
+                retries=2,
+                timeout=45,
+            )
+            payload = response.json()
+            output = payload.get('output', payload) if isinstance(payload, dict) else payload
+            return endpoint, {'success': True, 'data': output}
+        except (requests.RequestException, ValueError) as exc:
+            return endpoint, {'success': False, 'error': str(exc)}
+
+    results = {}
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = [executor.submit(fetch_endpoint, endpoint) for endpoint, _ in endpoints]
+        for future in as_completed(futures):
+            endpoint, result = future.result()
+            results[endpoint] = result
+
+    success = any(result.get('success') for result in results.values())
+    return jsonify({
+        'success': success,
+        'date': date_obj.isoformat(),
+        'location': location,
+        'results': results,
+    }), (200 if success else 502)
+
+
+@app.route('/api/consultation', methods=['POST'])
+def consultation_api():
+    payload = request.get_json(silent=True) or {}
+    name = str(payload.get('name') or '').strip()
+    email_address = str(payload.get('email') or '').strip()
+    phone = str(payload.get('phone') or '').strip()
+    consultation_type = str(payload.get('type') or '').strip()
+    message_text = str(payload.get('message') or '').strip()
+
+    allowed_types = {
+        'General Guidance', 'Career', 'Love & Marriage', 'Health', 'Business'
+    }
+    parsed_email = parseaddr(email_address)[1]
+    if not name or not phone or not email_address or parsed_email != email_address or '@' not in email_address:
+        return jsonify({'success': False, 'error': 'Enter your name, a valid email address, and phone number.'}), 400
+    if consultation_type not in allowed_types:
+        return jsonify({'success': False, 'error': 'Select a valid consultation type.'}), 400
+    if len(name) > 200 or len(email_address) > 320 or len(phone) > 80 or len(message_text) > 5000:
+        return jsonify({'success': False, 'error': 'One or more fields exceed the allowed length.'}), 400
+
+    smtp_host = (os.getenv('SMTP_HOST') or 'smtp.gmail.com').strip()
+    smtp_username = (os.getenv('SMTP_USERNAME') or 'runmyastro@gmail.com').strip()
+    smtp_password = (os.getenv('SMTP_PASSWORD') or '').replace(' ', '').strip()
+    smtp_from = (os.getenv('SMTP_FROM_EMAIL') or smtp_username).strip()
+    try:
+        smtp_port = int(os.getenv('SMTP_PORT', '587'))
+    except ValueError:
+        return jsonify({'success': False, 'error': 'Email delivery is not configured correctly.'}), 503
+
+    if not all((smtp_host, smtp_username, smtp_from)) or not smtp_password:
+        return jsonify({
+            'success': False,
+            'error': 'Consultation email is not configured yet. Please try again later.'
+        }), 503
+
+    email_message = EmailMessage()
+    email_message['Subject'] = f'Consultation request: {consultation_type}'
+    email_message['From'] = smtp_from
+    email_message['To'] = 'runmyastro@gmail.com'
+    email_message['Reply-To'] = email_address
+    email_message.set_content(
+        'A new JyotishLab consultation request was submitted.\n\n'
+        f'Name: {name}\n'
+        f'Email: {email_address}\n'
+        f'Phone: {phone}\n'
+        f'Consultation type: {consultation_type}\n\n'
+        f'Details:\n{message_text or "No additional details provided."}\n'
+    )
+
+    try:
+        context = ssl.create_default_context()
+        if smtp_port == 465:
+            with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=20, context=context) as server:
+                server.login(smtp_username, smtp_password)
+                server.send_message(email_message)
+        else:
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
+                server.ehlo()
+                server.starttls(context=context)
+                server.ehlo()
+                server.login(smtp_username, smtp_password)
+                server.send_message(email_message)
+    except (OSError, smtplib.SMTPException):
+        app.logger.exception('Consultation email delivery failed')
+        return jsonify({
+            'success': False,
+            'error': 'We could not send your request right now. Please try again later.'
+        }), 502
+
+    return jsonify({'success': True, 'message': 'Your consultation request was sent successfully.'})
 
 
 @app.route('/api/send-otp', methods=['POST'])
@@ -843,20 +1289,77 @@ def planets_api():
         if not isinstance(output, dict):
             return jsonify({'success': False, 'error': 'Unexpected planets response format'}), 502
 
+        karaka_by_planet = {}
+        try:
+            karaka_response = requests.post(
+                'https://api.navamsha.in/api/v1/jaimini/karakas',
+                json=request_payload,
+                headers={'x-api-key': api_key, 'Content-Type': 'application/json'},
+                timeout=30,
+            )
+            karaka_response.raise_for_status()
+            karaka_body = karaka_response.json()
+            karaka_output = karaka_body.get('output', {}) if isinstance(karaka_body, dict) else {}
+            karaka_roles = karaka_output.get('karakas', {}) if isinstance(karaka_output, dict) else {}
+            if isinstance(karaka_roles, dict):
+                for role, details in karaka_roles.items():
+                    if isinstance(details, dict) and details.get('planet'):
+                        karaka_by_planet[str(details['planet']).strip().casefold()] = role
+        except (requests.RequestException, ValueError) as exc:
+            app.logger.warning('Unable to load Jaimini Karakas: %s', exc)
+
+        classical_planet_names = {
+            'sun': 'Sun', 'moon': 'Moon', 'mars': 'Mars', 'mercury': 'Mercury',
+            'jupiter': 'Jupiter', 'venus': 'Venus', 'saturn': 'Saturn',
+            'rahu': 'Rahu', 'ketu': 'Ketu',
+        }
+        calculation_planets = {}
+        longitudes = {}
+        for raw_name, raw_data in output.items():
+            if not isinstance(raw_data, dict):
+                continue
+            canonical_name = classical_planet_names.get(str(raw_name).strip().casefold())
+            if not canonical_name:
+                continue
+            calculation_planets[canonical_name] = raw_data
+            full_degree = raw_data.get('fullDegree')
+            if full_degree is not None:
+                longitudes[canonical_name] = full_degree
+        combust_planets = calculate_combust_planets(calculation_planets, longitudes)
+
         rows = []
         for planet_name, planet_data in output.items():
             if not isinstance(planet_data, dict):
                 continue
-            degree_value = planet_data.get('normDegree')
-            if degree_value is None:
-                degree_value = planet_data.get('fullDegree')
+            planet_key = str(planet_name).strip().casefold()
+            is_retrograde = str(planet_data.get('isRetro', '')).strip().lower() in {'true', '1', 'yes'}
             try:
-                if isinstance(degree_value, (int, float)):
-                    degree_text = f"{float(degree_value):.2f}°"
+                degrees = planet_data.get('degrees')
+                minutes = planet_data.get('minutes')
+                seconds = planet_data.get('seconds')
+                if degrees is not None and minutes is not None and seconds is not None:
+                    degrees = int(degrees)
+                    minutes = int(minutes)
+                    seconds = int(round(float(seconds)))
                 else:
-                    degree_text = str(degree_value or 'N/A')
-            except Exception:
-                degree_text = str(degree_value or 'N/A')
+                    degree_value = planet_data.get('normDegree')
+                    if degree_value is None:
+                        degree_value = float(planet_data.get('fullDegree')) % 30
+                    absolute_degree = abs(float(degree_value))
+                    degrees = int(absolute_degree)
+                    minute_value = (absolute_degree - degrees) * 60
+                    minutes = int(minute_value)
+                    seconds = int(round((minute_value - minutes) * 60))
+
+                if seconds >= 60:
+                    seconds -= 60
+                    minutes += 1
+                if minutes >= 60:
+                    minutes -= 60
+                    degrees += 1
+                degree_text = f'{degrees}°{minutes:02d}\'{seconds:02d}"'
+            except (TypeError, ValueError, OverflowError):
+                degree_text = 'N/A'
 
             rows.append({
                 'planet': planet_data.get('localized_name') or planet_name,
@@ -864,13 +1367,122 @@ def planets_api():
                 'degree': degree_text,
                 'nakshatra': planet_data.get('nakshatra_name') or 'N/A',
                 'pada': planet_data.get('nakshatra_pada') or 'N/A',
-                'nakshatra_lord': planet_data.get('nakshatra_vimsottari_lord') or 'N/A'
+                'nakshatra_lord': planet_data.get('nakshatra_vimsottari_lord') or 'N/A',
+                'karaka': karaka_by_planet.get(planet_key, 'N/A'),
+                'sidereal_longitude': str(planet_data.get('fullDegree')) if planet_data.get('fullDegree') is not None else None,
+                'planet_key': planet_key,
+                'retrograde': is_retrograde,
+                'combust': planet_key in combust_planets,
             })
 
-        return jsonify({'success': True, 'planets': rows})
+        def sidereal_longitude_for(planet_name):
+            planet_data = next((
+                data for name, data in output.items()
+                if str(name).strip().casefold() == planet_name.casefold()
+            ), None)
+            if not isinstance(planet_data, dict):
+                return None
+            longitude_value = planet_data.get('fullDegree')
+            if longitude_value is None:
+                longitude_value = planet_data.get('full_degree')
+            return longitude_value
+
+        yogi_report = None
+        sun_longitude = sidereal_longitude_for('Sun')
+        moon_longitude = sidereal_longitude_for('Moon')
+        if sun_longitude is not None and moon_longitude is not None:
+            try:
+                yogi_report = calculate_yogi_points(sun_longitude, moon_longitude)
+            except ValueError:
+                yogi_report = None
+
+        return jsonify({'success': True, 'planets': rows, 'yogi': yogi_report})
     except requests.RequestException as exc:
         return jsonify({'success': False, 'error': f'Planets API request failed: {str(exc)}'}), 502
 
+
+
+@app.route('/api/v1/strength/ashtakavarga', methods=['POST'])
+def ashtakavarga_api():
+    payload = request.get_json(silent=True) or {}
+    dob = (payload.get('dob') or '').strip()
+    tob = (payload.get('tob') or payload.get('time') or '').strip()
+    lat = (payload.get('lat') or '').strip()
+    lon = (payload.get('lon') or '').strip()
+    place_name = (payload.get('place') or payload.get('place_name') or '').strip()
+    tz = payload.get('tz', payload.get('timezone'))
+
+    if not dob or not tob:
+        return jsonify({'success': False, 'error': 'dob and tob are required'}), 400
+
+    api_key = (
+        os.getenv('NAVAMSHA_API_KEY') or
+        os.getenv('VDA_API_KEY') or
+        os.getenv('FREE_ASTRO_API_KEY') or
+        os.getenv('FREEASTRO_API_KEY') or
+        ''
+    ).strip()
+    if not api_key:
+        return jsonify({'success': False, 'error': 'No API key is configured.'}), 500
+
+    try:
+        date_obj = datetime.strptime(dob, '%Y-%m-%d')
+        time_obj = datetime.strptime(tob, '%H:%M')
+    except ValueError:
+        return jsonify({'success': False, 'error': 'dob must be YYYY-MM-DD and tob must be HH:MM'}), 400
+
+    def parse_timezone(value):
+        if value in (None, '', 'AUTO'):
+            return 5.5
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 5.5
+
+    latitude = 28.6139
+    longitude = 77.2090
+    if lat and lon:
+        try:
+            latitude = float(lat)
+            longitude = float(lon)
+        except ValueError:
+            return jsonify({'success': False, 'error': 'Latitude and longitude must be valid numbers.'}), 400
+    elif place_name:
+        try:
+            latitude, longitude, _ = resolve_place_to_coordinates(place_name)
+        except ValueError as exc:
+            return jsonify({'success': False, 'error': str(exc)}), 400
+        except (RuntimeError, requests.RequestException) as exc:
+            return jsonify({'success': False, 'error': str(exc)}), 502
+
+    request_payload = {
+        'year': date_obj.year,
+        'month': date_obj.month,
+        'date': date_obj.day,
+        'hours': time_obj.hour,
+        'minutes': time_obj.minute,
+        'seconds': 0,
+        'latitude': latitude,
+        'longitude': longitude,
+        'timezone': parse_timezone(tz),
+        'settings': {},
+    }
+
+    try:
+        response = post_json_with_retry(
+            'https://api.navamsha.in/api/v1/strength/ashtakavarga',
+            request_payload,
+            api_key,
+            retries=2,
+            timeout=45,
+        )
+        data = response.json()
+        output = data.get('output', data) if isinstance(data, dict) else data
+        if not isinstance(output, dict):
+            return jsonify({'success': False, 'error': 'Unexpected Ashtakavarga response format.'}), 502
+        return jsonify({'success': True, 'ashtakavarga': output})
+    except (requests.RequestException, ValueError) as exc:
+        return jsonify({'success': False, 'error': f'Ashtakavarga request failed: {str(exc)}'}), 502
 
 
 @app.route('/api/v1/astrology/kundli/advanced', methods=['POST'])
@@ -950,30 +1562,82 @@ def kundli_advanced():
 
         def normalize_balance(value):
             if isinstance(value, dict):
-                return (
-                    value.get('duration')
-                    or value.get('balance')
-                    or value.get('value')
-                    or value.get('remaining')
-                    or value.get('description')
-                    or 'N/A'
-                )
+                for key in ('duration', 'balance', 'value', 'remaining', 'description'):
+                    candidate = value.get(key)
+                    if candidate is not None and str(candidate).strip():
+                        return candidate
+                return 'N/A'
             return value if value is not None else 'N/A'
 
         dasha_output = data.get('output') if isinstance(data, dict) else {}
-        periods = dasha_output.get('dasha_periods') if isinstance(dasha_output, dict) else []
+        if not isinstance(dasha_output, dict):
+            dasha_output = {}
+        periods = dasha_output.get('dasha_periods') or []
+        balance_output = dasha_output
+        birth_balance = dasha_output.get('dasha_balance') or dasha_output.get('birth_dasha_balance')
+
+        if birth_balance is None or normalize_balance(birth_balance) == 'N/A':
+            try:
+                balance_response = post_json_with_retry(
+                    'https://api.navamsha.in/api/v1/astrology/dasha-periods',
+                    request_payload,
+                    api_key,
+                    retries=2,
+                    timeout=30,
+                )
+                balance_data = balance_response.json()
+                fallback_output = balance_data.get('output') if isinstance(balance_data, dict) else {}
+                if isinstance(fallback_output, dict):
+                    balance_output = fallback_output
+                    birth_balance = fallback_output.get('dasha_balance') or fallback_output.get('birth_dasha_balance')
+                    if not periods:
+                        periods = fallback_output.get('dasha_periods') or []
+            except (requests.RequestException, ValueError):
+                pass
+
         rows = []
         if isinstance(periods, list):
             for item in periods:
                 if isinstance(item, dict):
+                    period_name = item.get('name') or item.get('planet') or item.get('lord') or 'N/A'
+                    antardasha_items = item.get('antardasha') or item.get('antardashas') or item.get('sub_periods') or []
+                    antardasha_rows = []
+                    if isinstance(antardasha_items, list):
+                        for antardasha in antardasha_items:
+                            if not isinstance(antardasha, dict):
+                                continue
+                            antardasha_rows.append({
+                                'planet': antardasha.get('name') or antardasha.get('planet') or antardasha.get('lord') or 'N/A',
+                                'start_date': antardasha.get('start') or antardasha.get('start_date') or 'N/A',
+                                'end_date': antardasha.get('end') or antardasha.get('end_date') or 'N/A',
+                            })
                     rows.append({
-                        'planet': item.get('name') or item.get('planet') or item.get('lord') or 'N/A',
-                        'period': item.get('name') or item.get('period') or 'N/A',
+                        'planet': period_name,
+                        'period': period_name,
                         'start_date': item.get('start') or item.get('start_date') or 'N/A',
-                        'end_date': item.get('end') or item.get('end_date') or 'N/A'
+                        'end_date': item.get('end') or item.get('end_date') or 'N/A',
+                        'antardasha': antardasha_rows,
                     })
 
-        birth_balance = dasha_output.get('dasha_balance') if isinstance(dasha_output, dict) else None
+        current_period = None
+        try:
+            current_response = post_json_with_retry(
+                'https://api.navamsha.in/api/v1/dasha/current',
+                request_payload,
+                api_key,
+                retries=2,
+                timeout=30,
+            )
+            current_data = current_response.json()
+            current_output = current_data.get('output') if isinstance(current_data, dict) else None
+            if isinstance(current_output, dict):
+                current_period = {
+                    'mahadasha': current_output.get('mahadasha'),
+                    'antardasha': current_output.get('antardasha'),
+                }
+        except (requests.RequestException, ValueError):
+            current_period = None
+
         birth_balance_value = normalize_balance(birth_balance)
         birth_balance_lord = None
         if isinstance(birth_balance, dict):
@@ -984,9 +1648,9 @@ def kundli_advanced():
                 birth_balance_lord = birth_balance_lord
 
         # Some provider payloads keep the lord on a nested raw output object instead of the top-level balance object.
-        if not birth_balance_lord and isinstance(data, dict):
-            raw_output = data.get('output') if isinstance(data.get('output'), dict) else {}
-            nested_lord = raw_output.get('dasha_balance', {}).get('lord') if isinstance(raw_output.get('dasha_balance'), dict) else None
+        if not birth_balance_lord:
+            nested_balance = balance_output.get('dasha_balance') or balance_output.get('birth_dasha_balance')
+            nested_lord = nested_balance.get('lord') if isinstance(nested_balance, dict) else None
             if isinstance(nested_lord, dict):
                 birth_balance_lord = nested_lord.get('name') or nested_lord.get('planet') or nested_lord.get('lord')
             elif isinstance(nested_lord, str):
@@ -996,6 +1660,7 @@ def kundli_advanced():
             'success': True,
             'dasha': {
                 'periods': rows,
+                'current': current_period,
                 'birth_dasha_balance': birth_balance_value,
                 'birth_dasha_lord': birth_balance_lord or 'N/A',
                 'raw': data
@@ -1065,54 +1730,126 @@ def chart_svg():
         'latitude': latitude,
         'longitude': longitude,
         'timezone': parse_timezone(tz),
-        'settings': {}
+        'settings': {
+            'observation_point': 'geocentric',
+            'ayanamsha': 'lahiri'
+        }
     }
 
     try:
-        resp = post_json_with_retry(
-            'https://api.navamsha.in/api/v1/horoscope-chart-svg-code',
+        response = post_json_with_retry(
+            'https://api.navamsha.in/api/v1/kundali/complete',
             request_payload,
             api_key,
             retries=3,
             timeout=30,
         )
-        j = resp.json()
-        # Try to locate svg string anywhere in response
-        svg = find_string_with_svg(j) or ''
-        if not svg:
-            # attempt common places
-            out = j.get('output') if isinstance(j, dict) else None
-            if isinstance(out, dict):
-                for k in ('svg', 'svg_code', 'svgHtml', 'svgString'):
-                    if out.get(k):
-                        svg = out.get(k)
-                        break
+        response_data = response.json()
+        output = response_data.get('output') if isinstance(response_data, dict) else None
+        if not isinstance(output, dict):
+            return jsonify({'success': False, 'error': 'Unexpected kundali/complete response format'}), 502
 
-        if not svg:
-            return jsonify({'success': False, 'error': 'SVG not found in provider response', 'raw': j}), 502
+        planets = output.get('planets')
+        ascendant = output.get('ascendant')
+        if not isinstance(planets, dict) or not isinstance(ascendant, dict):
+            return jsonify({'success': False, 'error': 'Kundali response did not include chart placements'}), 502
+        longitudes = output.get('longitudes') if isinstance(output.get('longitudes'), dict) else {}
+        combust_planets = calculate_combust_planets(planets, longitudes)
 
+        import xml.etree.ElementTree as ET
+
+        svg_namespace = 'http://www.w3.org/2000/svg'
+        ET.register_namespace('', svg_namespace)
+        svg = ET.Element(f'{{{svg_namespace}}}svg', {
+            'viewBox': '0 0 480 480',
+            'role': 'img',
+            'aria-label': 'North Indian Vedic birth chart',
+            'data-source': 'kundali-complete'
+        })
+        line_color = '#B5A886'
+        planet_color = '#D4A72C'
+        sign_color = '#A7352B'
+        frame = ET.SubElement(svg, f'{{{svg_namespace}}}rect', {
+            'x': '20', 'y': '20', 'width': '440', 'height': '440',
+            'fill': 'none', 'stroke': line_color, 'stroke-width': '2'
+        })
+
+        def add_line(x1, y1, x2, y2):
+            ET.SubElement(svg, f'{{{svg_namespace}}}line', {
+                'x1': str(x1), 'y1': str(y1), 'x2': str(x2), 'y2': str(y2),
+                'stroke': line_color, 'stroke-width': '1.5'
+            })
+
+        add_line(20, 20, 460, 460)
+        add_line(460, 20, 20, 460)
+        add_line(240, 20, 20, 240)
+        add_line(20, 240, 240, 460)
+        add_line(460, 240, 240, 20)
+        add_line(240, 460, 460, 240)
+
+        house_centers = {
+            1: (240, 105), 2: (145, 75), 3: (75, 145), 4: (105, 240),
+            5: (75, 335), 6: (145, 405), 7: (240, 375), 8: (335, 405),
+            9: (405, 335), 10: (375, 240), 11: (405, 145), 12: (335, 75)
+        }
+        zodiac_signs = [
+            'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+            'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+        ]
+        sign_number = ascendant.get('current_sign')
         try:
-            import xml.etree.ElementTree as ET
-            root = ET.fromstring(svg)
-            forbidden = {'NE', 'PL', 'UR', 'NEPTUNE', 'PLUTO', 'URANUS'}
-            for node in list(root.iter()):
-                if node.tag.endswith('text'):
-                    try:
-                        text_value = ''.join(node.itertext()).replace('\n', '').replace('\r', '').replace('\t', '').strip()
-                    except Exception:
-                        text_value = ''
-                    compact = ''.join(ch for ch in text_value if ch.isalpha()).upper()
-                    if compact in forbidden or compact.startswith('NE') or compact.startswith('PL') or compact.startswith('UR'):
-                        parent = node.getparent() if hasattr(node, 'getparent') else None
-                        if parent is not None:
-                            parent.remove(node)
-                        elif node in list(root):
-                            root.remove(node)
-            svg = ET.tostring(root, encoding='unicode')
-        except Exception:
-            svg = re.sub(r'(?is)<text[^>]*>.*?(?:Pl|Ur|Ne)[^<]*</text>', '', svg)
+            asc_sign_number = int(sign_number)
+        except (TypeError, ValueError):
+            asc_sign_number = zodiac_signs.index(ascendant.get('zodiac_sign_name')) + 1 if ascendant.get('zodiac_sign_name') in zodiac_signs else 1
 
-        return jsonify({'success': True, 'svg': svg})
+        planets_by_house = {house: [] for house in range(1, 13)}
+        planets_by_house[1].append(('Asc', ascendant, False))
+        abbreviations = {
+            'sun': 'Su', 'moon': 'Mo', 'mars': 'Ma', 'mercury': 'Me',
+            'jupiter': 'Ju', 'venus': 'Ve', 'saturn': 'Sa', 'rahu': 'Ra', 'ketu': 'Ke'
+        }
+        for planet_name, planet_data in planets.items():
+            abbreviation = abbreviations.get(str(planet_name).lower())
+            if not abbreviation or not isinstance(planet_data, dict):
+                continue
+            try:
+                house_number = int(planet_data.get('house_number'))
+            except (TypeError, ValueError):
+                house_number = 0
+            if house_number not in planets_by_house:
+                sign = planet_data.get('current_sign')
+                try:
+                    house_number = ((int(sign) - asc_sign_number + 12) % 12) + 1
+                except (TypeError, ValueError):
+                    continue
+            planets_by_house[house_number].append((
+                abbreviation,
+                planet_data,
+                str(planet_name).lower() in combust_planets
+            ))
+
+        for house_number, (x, y) in house_centers.items():
+            sign_for_house = ((asc_sign_number + house_number - 2) % 12) + 1
+            sign_text = ET.SubElement(svg, f'{{{svg_namespace}}}text', {
+                'x': str(x), 'y': str(y - 25), 'text-anchor': 'middle',
+                'font-size': '12', 'font-family': 'sans-serif', 'fill': sign_color
+            })
+            sign_text.text = str(sign_for_house)
+
+            house_planets = planets_by_house[house_number]
+            line_height = 16 if len(house_planets) > 4 else 19
+            start_y = y - ((len(house_planets) - 1) * line_height / 2) + 5
+            for index, (label, planet_data, is_combust) in enumerate(house_planets):
+                retrograde = str(planet_data.get('isRetro', '')).lower() == 'true' and label != 'Asc'
+                label_text = f'{label}{" C" if is_combust else ""}{" R" if retrograde else ""}'
+                ET.SubElement(svg, f'{{{svg_namespace}}}text', {
+                    'x': str(x), 'y': str(round(start_y + index * line_height, 1)),
+                    'text-anchor': 'middle', 'dominant-baseline': 'middle',
+                    'font-size': '13', 'font-family': 'sans-serif',
+                    'font-weight': '600', 'fill': planet_color
+                }).text = label_text
+
+        return jsonify({'success': True, 'svg': ET.tostring(svg, encoding='unicode')})
     except requests.RequestException as exc:
         return jsonify({'success': False, 'error': f'SVG API request failed: {str(exc)}'}), 502
 

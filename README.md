@@ -1,6 +1,6 @@
-# JyotishX (Local)
+# JyotishLab (Local)
 
-Simple local astrology demo (JyotishX) with a Bootstrap UI and a small Express server.
+JyotishLab is a local Vedic astrology platform with a Bootstrap UI and Flask/Express development servers.
 
 Run locally:
 

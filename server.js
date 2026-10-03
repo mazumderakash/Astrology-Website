@@ -64,5 +64,5 @@ app.get('/api/horoscope', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`JyotishX running at http://localhost:${port}`);
+  console.log(`JyotishLab running at http://localhost:${port}`);
 });

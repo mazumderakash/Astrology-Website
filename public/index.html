@@ -3,16 +3,26 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>JyotishX — Local</title>
+    <title>JyotishLab | Vedic Astrology</title>
+    <script>
+      try {
+        document.documentElement.dataset.theme = localStorage.getItem('jyotishlab_theme') === 'light' ? 'light' : 'dark';
+      } catch (error) {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles.css?v=chart-styles-17">
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container-fluid">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="#home" aria-label="JyotishX home">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="#home" aria-label="JyotishLab home">
           <span class="brand-logo" aria-hidden="true">
-            <svg viewBox="0 0 120 120" role="img" aria-label="JyotishX logo">
+            <svg viewBox="0 0 120 120" role="img" aria-label="JyotishLab logo">
               <defs>
                 <linearGradient id="goldGlow" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stop-color="#fff1bd"/>
@@ -29,167 +39,402 @@
               <circle cx="88" cy="68" r="6" fill="#f9d66c" opacity="0.8"/>
               <path d="M37 41c6-12 18-18 30-18 14 0 26 8 31 20" fill="none" stroke="url(#goldGlow)" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
               <path d="M30 84c16 8 38 10 60 0" fill="none" stroke="url(#goldGlow)" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
-              <text x="60" y="72" text-anchor="middle" font-size="20" font-weight="700" font-family="Georgia, 'Times New Roman', serif" fill="url(#goldGlow)" letter-spacing="1">JX</text>
+              <text x="60" y="72" text-anchor="middle" font-size="20" font-weight="700" font-family="Georgia, 'Times New Roman', serif" fill="url(#goldGlow)" letter-spacing="1">JL</text>
             </svg>
           </span>
+          <span class="brand-wordmark">JyotishLab</span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
         <div class="collapse navbar-collapse" id="nav">
           <ul class="navbar-nav ms-auto">
             <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="#chart">Chart Preparation</a></li>
+            <li class="nav-item"><a class="nav-link" href="#chart">Birth Chart Preparation</a></li>
+            <li class="nav-item"><a class="nav-link" href="#askJyotishLab">Ask JyotishLab</a></li>
             <li class="nav-item"><a class="nav-link" href="#panchang">Daily Panchang</a></li>
+            <li class="nav-item"><a class="nav-link" href="#zodiacGuide">Zodiac Guide</a></li>
             <li class="nav-item"><a class="nav-link" href="#consult">Consultation</a></li>
             <li class="nav-item"><a class="nav-link" href="#login">Login</a></li>
           </ul>
+        </div>
+        <div class="navbar-actions d-flex align-items-center gap-2 ms-auto">
+          <div class="language-control">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7" />
+              <path d="M3 12h18M12 3c2.3 2.5 3.4 5.5 3.4 9s-1.1 6.5-3.4 9c-2.3-2.5-3.4-5.5-3.4-9S9.7 5.5 12 3Z" fill="none" stroke="currentColor" stroke-width="1.4" />
+            </svg>
+            <label class="visually-hidden" for="languageSelect">Language</label>
+            <select id="languageSelect" aria-label="Select language">
+              <option value="en">English</option>
+              <option value="hi">Hindi</option>
+              <option value="bn">Bengali</option>
+              <option value="es">Spanish</option>
+            </select>
+          </div>
+          <div class="form-check form-switch theme-switch">
+            <input id="themeToggle" class="form-check-input" type="checkbox" role="switch">
+            <label class="form-check-label" for="themeToggle">Dark mode</label>
+          </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
         </div>
       </div>
     </nav>
 
     <header id="home" class="hero text-center text-white py-5 main-section">
       <div class="container hero-inner">
-        <div class="hero-badge">Ancient Wisdom • Precise Calculations • Deeper Insights</div>
-        <h1 class="display-5 hero-title">JyotishX</h1>
-        <p class="lead">JyotishX is a modern Vedic astrology platform designed to bring traditional Jyotisha knowledge and intelligent astrological analysis together in one place.</p>
+        <div class="hero-badge">Ancient Wisdom <span>•</span> Precise Calculations <span>•</span> Deeper Insights</div>
+        <h1 class="display-5 hero-title">JyotishLab</h1>
+        <p class="lead">Vedic Astrology for a Deeper Understanding of Life</p>
+        <p class="hero-description">Explore your birth chart, planetary periods, yogas, and life timing through traditional Jyotisha knowledge and thoughtful astrological analysis.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#chart">Create Your Chart <span aria-hidden="true">→</span></a>
+          <a class="btn btn-outline-primary" href="#panchang">Explore Daily Panchang</a>
+        </div>
       </div>
     </header>
 
     <main class="container my-5">
-      <section id="horoscope" class="mb-5 main-section">
-        <h2>Get Your Daily Horoscope</h2>
-        <div class="row g-3 align-items-center mt-3">
-          <div class="col-md-4">
-            <select id="zodiacSelect" class="form-select">
-              <option value="aries">♈ Aries</option>
-              <option value="taurus">♉ Taurus</option>
-              <option value="gemini">♊ Gemini</option>
-              <option value="cancer">♋ Cancer</option>
-              <option value="leo">♌ Leo</option>
-              <option value="virgo">♍ Virgo</option>
-              <option value="libra">♎ Libra</option>
-              <option value="scorpio">♏ Scorpio</option>
-              <option value="sagittarius">♐ Sagittarius</option>
-              <option value="capricorn">♑ Capricorn</option>
-              <option value="aquarius">♒ Aquarius</option>
-              <option value="pisces">♓ Pisces</option>
-            </select>
+      <section id="chart" class="mb-5 main-section">
+        <nav id="chartBreadcrumb" class="small text-muted mb-2" aria-label="Breadcrumb">
+          <a class="chart-breadcrumb-link" href="#home">Home</a>
+          <span aria-hidden="true"> / </span>
+          <a id="chartBreadcrumbName" class="chart-breadcrumb-link chart-breadcrumb-current" href="#chart" aria-current="page">Chart</a>
+        </nav>
+        <div class="chart-preparation-card">
+          <div class="chart-preparation-heading">
+            <span class="chart-preparation-kicker">NATAL CHART</span>
+            <h2>Birth Chart Preparation</h2>
+            <p>Enter birth details to prepare a natal chart using the live kundli API.</p>
           </div>
-          <div class="col-md-2">
-            <button id="getBtn" class="btn btn-primary">Get Horoscope</button>
+          <form id="chartForm" class="row g-3 mt-2">
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="birth-picker-field">
+                <label id="chartNameLabel" class="birth-picker-label" for="chartName">Name <span class="field-optional">(optional)</span></label>
+                <input id="chartName" class="form-control chart-field-control birth-name-control" placeholder="Your name" aria-labelledby="chartNameLabel" />
+              </div>
+            </div>
+            <input id="chartDob" type="hidden" />
+            <input id="chartTob" type="hidden" />
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="birth-picker-field">
+                <label id="birthDateLabel" class="birth-picker-label">Date <span>*</span></label>
+                <div class="birth-picker" role="group" aria-labelledby="birthDateLabel">
+                  <span class="birth-picker-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M7.5 3v4M16.5 3v4M3.5 9.5h17"/></svg>
+                  </span>
+                  <div class="birth-picker-segment"><select id="chartDobDay" aria-label="Birth day"><option value="">DD</option></select></div>
+                  <div class="birth-picker-segment"><select id="chartDobMonth" aria-label="Birth month"><option value="">MMM</option></select></div>
+                  <div class="birth-picker-segment"><select id="chartDobYear" aria-label="Birth year"><option value="">YYYY</option></select></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="birth-picker-field">
+                <label id="birthTimeLabel" class="birth-picker-label">Time <span>*</span></label>
+                <div class="birth-picker" role="group" aria-labelledby="birthTimeLabel">
+                  <span class="birth-picker-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+                  </span>
+                  <div class="birth-picker-segment"><select id="chartTobHour" aria-label="Birth hour"><option value="">HH</option></select></div>
+                  <div class="birth-picker-segment"><select id="chartTobMinute" aria-label="Birth minute"><option value="">MM</option></select></div>
+                  <div class="birth-picker-segment"><select id="chartTobPeriod" aria-label="AM or PM"><option value="">AM/PM</option><option value="AM">AM</option><option value="PM">PM</option></select></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="birth-picker-field">
+                <label id="chartPlaceLabel" class="birth-picker-label" for="chartPlace">Place of Birth <span>*</span></label>
+                <div class="place-autocomplete">
+                  <input id="chartPlace" class="form-control chart-field-control" placeholder="Place name (e.g. New Delhi)" aria-labelledby="chartPlaceLabel" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="chartPlaceSuggestions" autocomplete="off" required />
+                  <ul id="chartPlaceSuggestions" class="place-suggestions d-none" role="listbox" aria-label="Place suggestions"></ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="birth-picker-field">
+                <label class="birth-picker-label" for="chartTz">Timezone <span class="field-optional">(automatic)</span></label>
+                <input id="chartTz" class="form-control chart-field-control" placeholder="Calculated from place and birth time" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="birth-picker-field">
+                <label class="birth-picker-label" for="chartLat">Latitude <span class="field-optional">(automatic)</span></label>
+                <input id="chartLat" class="form-control chart-field-control" placeholder="Resolved automatically" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="birth-picker-field">
+                <label class="birth-picker-label" for="chartLon">Longitude <span class="field-optional">(automatic)</span></label>
+                <input id="chartLon" class="form-control chart-field-control" placeholder="Resolved automatically" readonly />
+              </div>
+            </div>
+            <div id="chartTimezoneInfo" class="col-12 chart-timezone-info d-none" role="status" aria-live="polite"></div>
+            <div class="col-12 d-flex flex-wrap gap-2">
+              <button class="btn btn-primary" type="submit">Prepare Chart</button>
+              <button id="resetChartBtn" class="btn btn-outline-primary" type="button">Reset</button>
+            </div>
+          </form>
+        </div>
+
+          <div id="chartResult" class="mt-4 alert alert-secondary d-none" role="status" aria-live="polite"></div>
+          <details id="birthDetails" class="chart-output-panel mt-3 d-none">
+            <summary class="chart-output-toggle"><span class="chart-output-title">Birth Details</span></summary>
+            <div class="chart-output-content">
+              <div class="chart-pdf-actions">
+                <button id="previewChartPdf" class="btn btn-outline-primary" type="button" disabled>Preview PDF</button>
+                <button id="downloadChartPdf" class="btn btn-primary" type="button" disabled>Download PDF</button>
+              </div>
+              <div id="chartPdfStatus" class="chart-pdf-status d-none" role="status" aria-live="polite"></div>
+              <div id="birthDetailsContent"></div>
+            </div>
+          </details>
+          <details id="chartSummarySection" class="chart-output-panel mt-4 d-none">
+            <summary class="chart-output-toggle"><span class="chart-output-title">Complete Birth Details</span></summary>
+            <div class="chart-output-content">
+              <div id="chartSummary" class="chart-summary d-none"></div>
+            </div>
+          </details>
+
+          <!-- Birth chart rendering -->
+          <details id="northChartSection" class="chart-output-panel mt-4 d-none">
+            <summary class="chart-output-toggle"><span class="chart-output-title">Birth Chart</span></summary>
+            <div class="chart-output-content">
+              <div class="birth-chart-toolbar">
+                <div id="chartStyleToggle" class="chart-style-toggle" role="group" aria-label="Birth chart style">
+                  <button type="button" class="chart-style-option active" data-chart-style="north" aria-pressed="true">North Indian</button>
+                  <button type="button" class="chart-style-option" data-chart-style="south" aria-pressed="false">South Indian</button>
+                  <button type="button" class="chart-style-option" data-chart-style="east" aria-pressed="false">East Indian</button>
+                </div>
+              </div>
+              <div id="northChartContainer" class="border p-2" style="min-height:200px; background:transparent"></div>
+            </div>
+          </details>
+
+          <div id="chartPdfPreviewModal" class="modal fade" tabindex="-1" aria-labelledby="chartPdfPreviewTitle" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+              <div class="modal-content chart-pdf-modal-content">
+                <div class="modal-header">
+                  <h2 id="chartPdfPreviewTitle" class="modal-title fs-5">Birth Chart PDF Preview</h2>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                  <iframe id="chartPdfPreviewFrame" class="chart-pdf-preview-frame" title="Birth chart PDF preview"></iframe>
+                </div>
+                <div class="modal-footer">
+                  <a id="downloadPreviewPdf" class="btn btn-primary" download="jyotishlab-birth-chart.pdf">Download PDF</a>
+                  <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="col-md-6">
-            <div id="result" class="alert alert-secondary">Select a sign and click "Get Horoscope".</div>
+
+          <details id="planets" class="chart-output-panel mt-4 d-none">
+            <summary class="chart-output-toggle"><span class="chart-output-title">Planets</span></summary>
+            <div class="chart-output-content">
+              <div class="table-responsive mt-3">
+                <table class="table table-dark planets-table">
+                  <thead>
+                    <tr>
+                      <th>Planets</th>
+                      <th>Sign</th>
+                      <th>Degree</th>
+                      <th>Nakshatra</th>
+                      <th>Pada</th>
+                      <th>Nakshatra Lord</th>
+                      <th>Karaka</th>
+                    </tr>
+                  </thead>
+                  <tbody id="planetsTableBody">
+                    <tr>
+                      <td colspan="7" class="text-center text-muted">Prepare a chart to load planet details.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details id="vimshottariDasha" class="chart-output-panel mt-4 d-none">
+            <summary class="chart-output-toggle"><span class="chart-output-title">Vimshottari Dasha Periods</span></summary>
+            <div class="chart-output-content">
+              <div class="table-responsive mt-3">
+                <table class="table table-dark planets-table">
+                  <thead>
+                    <tr>
+                      <th>Mahadasha</th>
+                      <th>Start</th>
+                      <th>End</th>
+                      <th>Duration</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashaTableBody">
+                    <tr>
+                      <td colspan="5" class="text-center text-muted">Prepare a chart to load dasha periods.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details id="houseInterpretation" class="chart-output-panel mt-4 d-none">
+            <summary class="chart-output-toggle"><span class="chart-output-title">House Interpretation</span></summary>
+            <div class="chart-output-content">
+              <div class="table-responsive mt-3">
+                <table class="table table-dark planets-table">
+                  <thead>
+                    <tr>
+                      <th>House Number</th>
+                      <th>Planets Posited</th>
+                    </tr>
+                  </thead>
+                  <tbody id="houseInterpretationTableBody">
+                    <tr>
+                      <td colspan="2" class="text-center text-muted">Prepare a chart to load house interpretation.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details id="planetaryAspects" class="chart-output-panel mt-4 d-none">
+            <summary class="chart-output-toggle"><span class="chart-output-title">Planetary Aspects</span></summary>
+            <div class="chart-output-content">
+              <div class="table-responsive mt-3">
+                <table class="table table-dark planets-table">
+                  <thead>
+                    <tr>
+                      <th>Planet</th>
+                      <th>Aspect</th>
+                      <th>Planets Aspected</th>
+                    </tr>
+                  </thead>
+                  <tbody id="planetaryAspectsTableBody">
+                    <tr>
+                      <td colspan="3" class="text-center text-muted">Prepare a chart to load planetary aspects.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details id="ashtakavarga" class="chart-output-panel mt-4 d-none">
+            <summary class="chart-output-toggle"><span class="chart-output-title">Ashtakavarga Strength</span></summary>
+            <div class="chart-output-content">
+              <div id="ashtakavargaStatus" class="panchang-status" role="status" aria-live="polite"></div>
+              <div id="ashtakavargaContent"></div>
+            </div>
+          </details>
+
+          <details id="ashtakavarga" class="chart-output-panel mt-4 d-none">
+            <summary class="chart-output-toggle"><span class="chart-output-title">Ashtakavarga Strength</span></summary>
+            <div class="chart-output-content">
+              <div id="ashtakavargaStatus" class="panchang-status" role="status" aria-live="polite">Prepare a chart to load Ashtakavarga strength.</div>
+              <div id="ashtakavargaContent"></div>
+            </div>
+          </details>
+      </section>
+
+      <section id="askJyotishLab" class="main-section mb-5 d-none">
+        <div class="ask-jyotishlab-shell">
+          <header class="ask-jyotishlab-heading">
+            <span class="chart-preparation-kicker">PERSONAL CHART GUIDE</span>
+            <h2>Ask JyotishLab</h2>
+            <p>Share your birth details naturally. You can send everything at once or fill in what is missing as we go.</p>
+          </header>
+          <div id="askChatMessages" class="ask-chat-messages" role="log" aria-live="polite" aria-relevant="additions">
+            <div class="ask-message ask-message-assistant">
+              <span class="ask-message-author">JyotishLab</span>
+              <p>Tell me your birth date, time, and place. For example: “Born on 27 Nov 1988 at noon in Kolkata.”</p>
+            </div>
+          </div>
+          <form id="askChatForm" class="ask-chat-composer">
+            <label class="visually-hidden" for="askChatInput">Your birth details</label>
+            <textarea id="askChatInput" rows="2" placeholder="Type your birth details..." autocomplete="off"></textarea>
+            <button id="askChatMic" class="ask-chat-mic btn btn-outline-primary" type="button" aria-label="Start voice input" title="Speak your birth details">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3m-4 0h8"/></svg>
+            </button>
+            <button class="btn btn-primary" type="submit">Send</button>
+          </form>
+          <div id="askChatStatus" class="ask-chat-status d-none" role="status" aria-live="polite"></div>
+          <section id="askBirthConfirmation" class="ask-birth-confirmation d-none" aria-labelledby="askConfirmationHeading">
+            <div class="ask-confirmation-heading">
+              <span class="chart-preparation-kicker">BIRTH DETAILS</span>
+              <h3 id="askConfirmationHeading">Confirm your details</h3>
+            </div>
+            <div id="askConfirmationSummary" class="ask-confirmation-summary"></div>
+            <p id="askTimezoneNote" class="ask-timezone-note"></p>
+            <div class="row g-3 ask-confirmation-fields">
+              <div class="col-12 col-sm-6 col-lg-3">
+                <label class="birth-picker-label" for="askConfirmName">Name <span class="field-optional">(optional)</span></label>
+                <input id="askConfirmName" class="form-control chart-field-control" placeholder="Your name" />
+              </div>
+              <div class="col-12 col-sm-6 col-lg-3">
+                <label class="birth-picker-label" for="askConfirmDob">Date of Birth <span>*</span></label>
+                <input id="askConfirmDob" class="form-control chart-field-control" type="date" required />
+              </div>
+              <div class="col-12 col-sm-6 col-lg-3">
+                <label class="birth-picker-label" for="askConfirmTob">Time of Birth <span>*</span></label>
+                <input id="askConfirmTob" class="form-control chart-field-control" type="time" required />
+              </div>
+              <div class="col-12 col-sm-6 col-lg-3">
+                <label class="birth-picker-label" for="askConfirmPlace">Place of Birth <span>*</span></label>
+                <div class="place-autocomplete">
+                  <input id="askConfirmPlace" class="form-control chart-field-control" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="askConfirmPlaceSuggestions" autocomplete="off" required />
+                  <ul id="askConfirmPlaceSuggestions" class="place-suggestions d-none" role="listbox" aria-label="Place suggestions"></ul>
+                </div>
+              </div>
+              <div class="col-12 d-flex flex-wrap align-items-center gap-3">
+                <button id="askGenerateChart" class="btn btn-primary" type="button">Generate Chart</button>
+              </div>
+            </div>
+          </section>
+          <div id="askChatCompletion" class="ask-chat-completion d-none" role="status" aria-live="polite">
+            <p>Your Vedic birth chart is ready.</p>
+            <a class="btn btn-primary" href="/chart">View My Chart</a>
           </div>
         </div>
       </section>
 
-      <section id="chart" class="mb-5 main-section">
-        <div id="chartBreadcrumb" class="small text-muted mb-2">Home / Chart</div>
-        <h2>Chart Preparation</h2>
-        <p class="text-muted">Enter birth details to prepare a natal chart using the live kundli API.</p>
-        <form id="chartForm" class="row g-3 mt-2">
-          <div class="col-md-3"><input id="chartName" class="form-control" placeholder="Name" /></div>
-          <div class="col-md-3"><input id="chartDob" type="date" class="form-control" /></div>
-          <div class="col-md-2"><input id="chartTob" type="time" class="form-control" /></div>
-          <div class="col-md-3"><input id="chartPlace" class="form-control" placeholder="Place name (e.g. New Delhi)" /></div>
-          <div class="col-md-2"><input id="chartTz" class="form-control" placeholder="Timezone (e.g. 5.5)" /></div>
-          <div class="col-md-2"><input id="chartLat" class="form-control" placeholder="Latitude (optional)" /></div>
-          <div class="col-md-2"><input id="chartLon" class="form-control" placeholder="Longitude (optional)" /></div>
-          <div class="col-12"><button class="btn btn-primary" type="submit">Prepare Chart</button></div>
-        </form>
-
-          <div id="chartResult" class="mt-4 alert alert-secondary d-none"></div>
-          <div id="birthDetails" class="mt-3 d-none"></div>
-          <div id="chartSummary" class="chart-summary d-none mt-4"></div>
-
-          <!-- North Indian birth chart rendering -->
-          <div id="northChartSection" class="mt-4 d-none">
-            <h3>Birth Chart (North Indian Style)</h3>
-            <div id="northChartContainer" class="border p-2" style="min-height:200px; background:transparent"></div>
-          </div>
-
-          <div id="planets" class="mt-4 d-none">
-            <h3>Planets</h3>
-            <div class="table-responsive mt-3">
-              <table class="table table-dark planets-table">
-                <thead>
-                  <tr>
-                    <th>Planets</th>
-                    <th>Sign</th>
-                    <th>Degree</th>
-                    <th>Nakshatra</th>
-                    <th>Pada</th>
-                    <th>Nakshatra Lord</th>
-                  </tr>
-                </thead>
-                <tbody id="planetsTableBody">
-                  <tr>
-                    <td colspan="6" class="text-center text-muted">Prepare a chart to load planet details.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div id="vimshottariDasha" class="mt-4 d-none">
-            <h3>Vimshottari Dasha Periods</h3>
-            <div class="table-responsive mt-3">
-              <table class="table table-dark planets-table">
-                <thead>
-                  <tr>
-                    <th>Period</th>
-                    <th>Start</th>
-                    <th>End</th>
-                  </tr>
-                </thead>
-                <tbody id="dashaTableBody">
-                  <tr>
-                    <td colspan="3" class="text-center text-muted">Prepare a chart to load dasha periods.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div id="houseInterpretation" class="mt-4 d-none">
-            <h3>House Interpretation</h3>
-            <div class="table-responsive mt-3">
-              <table class="table table-dark planets-table">
-                <thead>
-                  <tr>
-                    <th>House Number</th>
-                    <th>Planets Posited</th>
-                  </tr>
-                </thead>
-                <tbody id="houseInterpretationTableBody">
-                  <tr>
-                    <td colspan="2" class="text-center text-muted">Prepare a chart to load house interpretation.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-      </section>
-
       <section id="panchang" class="mb-5 main-section">
-        <h2>Daily Panchang</h2>
-        <p>Quick panchang details for today (demo):</p>
-        <ul>
-          <li>Tithi: Shukla Paksha</li>
-          <li>Nakshatra: Rohini</li>
-          <li>Good for: Auspicious events</li>
-        </ul>
+        <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+          <h2 class="mb-0">Daily Panchang</h2>
+        </div>
+        <form id="panchangForm" class="panchang-form row g-3 mb-3">
+          <div class="col-12 col-lg-4">
+            <label class="form-label" for="panchangPlace">Location</label>
+            <div class="place-autocomplete">
+              <input id="panchangPlace" class="form-control" type="text" value="Kolkata, West Bengal, India" placeholder="Search a city or place" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="panchangPlaceSuggestions" autocomplete="off" required />
+              <ul id="panchangPlaceSuggestions" class="place-suggestions d-none" role="listbox" aria-label="Panchang location suggestions"></ul>
+            </div>
+          </div>
+          <div class="col-6 col-lg-2">
+            <label class="form-label" for="panchangDate">Date</label>
+            <input id="panchangDate" class="form-control" type="date" required />
+          </div>
+          <div class="col-6 col-lg-3">
+            <label class="form-label" for="panchangTime">Local time</label>
+            <input id="panchangTime" class="form-control" type="time" value="12:00" required />
+          </div>
+          <div class="col-12 col-lg-3 d-flex align-items-end">
+            <button id="panchangRefresh" class="btn btn-outline-primary w-100" type="submit">Calculate Panchang</button>
+          </div>
+        </form>
+        <p id="panchangDisclaimer" class="panchang-disclaimer" role="note">Calculations use the selected location, date, and local time.</p>
+        <div id="panchangStatus" class="panchang-status" role="status" aria-live="polite">Loading today’s calculations…</div>
+        <div id="panchangResults" class="panchang-grid" aria-live="polite"></div>
       </section>
 
       <section id="consult" class="mb-5 main-section">
         <h2>Consultation</h2>
         <p>Book a consultation with an astrologer.</p>
         <form id="consultForm" class="row g-3 mt-2">
-          <div class="col-md-6"><input id="consultName" class="form-control" placeholder="Your Name" /></div>
-          <div class="col-md-6"><input id="consultEmail" class="form-control" placeholder="Email" /></div>
-          <div class="col-md-6"><input id="consultPhone" class="form-control" placeholder="Phone Number" /></div>
+          <div class="col-md-6"><input id="consultName" class="form-control" placeholder="Your Name" autocomplete="name" required /></div>
+          <div class="col-md-6"><input id="consultEmail" class="form-control" type="email" placeholder="Email" autocomplete="email" required /></div>
+          <div class="col-md-6"><input id="consultPhone" class="form-control" type="tel" placeholder="Phone Number" autocomplete="tel" required /></div>
           <div class="col-md-6">
             <select id="consultType" class="form-select">
               <option>General Guidance</option>
@@ -202,7 +447,7 @@
           <div class="col-12"><textarea id="consultMessage" class="form-control" rows="3" placeholder="Brief details"></textarea></div>
           <div class="col-12"><button class="btn btn-primary" type="submit">Request Consultation</button></div>
         </form>
-        <div id="consultResult" class="mt-3 alert alert-secondary d-none"></div>
+        <div id="consultResult" class="mt-3 alert alert-secondary d-none" role="status" aria-live="polite"></div>
       </section>
 
       <section id="login" class="mb-5 main-section">
@@ -250,119 +495,165 @@
         </div>
       </section>
 
-      <section id="zodiacs">
-        <h2>Zodiac Quick Guide</h2>
-        <div class="row mt-3">
-          <!-- repeat simple cards -->
-          <div class="col-md-3 mb-3">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5 class="card-title">Aries ♈</h5>
-                <p class="card-text">Energetic, courageous, and direct.</p>
-              </div>
-            </div>
+      <section id="zodiacGuide" class="main-section mb-5 d-none">
+        <h2>Zodiac Guide</h2>
+        <div class="row g-3 mt-2">
+          <div class="col-12 col-sm-6 col-xl-3">
+            <button class="card h-100 zodiac-guide-card" type="button" data-sign="Aries" data-summary="Aries (Mesha Rashi), ruled by Mars, is associated with initiative, courage, independence, and pioneering action." data-keywords="Initiative|Courage|Pioneering" data-bs-toggle="modal" data-bs-target="#zodiacOverviewModal" aria-haspopup="dialog" aria-controls="zodiacOverviewModal">
+              <span class="card-body"><span class="card-title">Aries</span><span class="zodiac-card-summary">Aries (Mesha Rashi), ruled by Mars, is associated with initiative, courage, independence, and pioneering action.</span><span class="zodiac-keywords"><span>Initiative</span><span>Courage</span><span>Pioneering</span></span><span class="zodiac-overview-link">Explore Detailed Overview</span></span>
+            </button>
           </div>
-          <div class="col-md-3 mb-3">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5 class="card-title">Taurus ♉</h5>
-                <p class="card-text">Steady, patient, and practical.</p>
-              </div>
-            </div>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <button class="card h-100 zodiac-guide-card" type="button" data-sign="Taurus" data-summary="Taurus (Vrishabha Rashi) values stability, patience, comfort, and the steady growth of resources." data-keywords="Stability|Patience|Steadfastness" data-bs-toggle="modal" data-bs-target="#zodiacOverviewModal" aria-haspopup="dialog" aria-controls="zodiacOverviewModal">
+              <span class="card-body"><span class="card-title">Taurus</span><span class="zodiac-card-summary">Taurus (Vrishabha Rashi) values stability, patience, comfort, and the steady growth of resources.</span><span class="zodiac-keywords"><span>Stability</span><span>Patience</span><span>Steadfastness</span></span><span class="zodiac-overview-link">Explore Detailed Overview</span></span>
+            </button>
           </div>
-          <div class="col-md-3 mb-3">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5 class="card-title">Gemini ♊</h5>
-                <p class="card-text">Curious, adaptable, and communicative.</p>
-              </div>
-            </div>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <button class="card h-100 zodiac-guide-card" type="button" data-sign="Gemini" data-summary="Gemini (Mithuna Rashi), ruled by Mercury, is linked with curiosity, adaptability, communication, and the exchange of ideas." data-keywords="Curiosity|Communication|Adaptability" data-bs-toggle="modal" data-bs-target="#zodiacOverviewModal" aria-haspopup="dialog" aria-controls="zodiacOverviewModal">
+              <span class="card-body"><span class="card-title">Gemini</span><span class="zodiac-card-summary">Gemini (Mithuna Rashi), ruled by Mercury, is linked with curiosity, adaptability, communication, and the exchange of ideas.</span><span class="zodiac-keywords"><span>Curiosity</span><span>Communication</span><span>Adaptability</span></span><span class="zodiac-overview-link">Explore Detailed Overview</span></span>
+            </button>
           </div>
-          <div class="col-md-3 mb-3">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5 class="card-title">Cancer ♋</h5>
-                <p class="card-text">Nurturing, intuitive, and protective.</p>
-              </div>
-            </div>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <button class="card h-100 zodiac-guide-card" type="button" data-sign="Cancer" data-summary="Cancer (Karka Rashi), ruled by the Moon, is linked with nurturing, protection, emotional depth, and a secure home life." data-keywords="Nurturing|Protection|Emotional Depth" data-bs-toggle="modal" data-bs-target="#zodiacOverviewModal" aria-haspopup="dialog" aria-controls="zodiacOverviewModal">
+              <span class="card-body"><span class="card-title">Cancer</span><span class="zodiac-card-summary">Cancer (Karka Rashi), ruled by the Moon, is linked with nurturing, protection, emotional depth, and a secure home life.</span><span class="zodiac-keywords"><span>Nurturing</span><span>Protection</span><span>Emotional Depth</span></span><span class="zodiac-overview-link">Explore Detailed Overview</span></span>
+            </button>
           </div>
-        </div>
-        <div class="row mt-3">
-          <div class="col-md-3 mb-3">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5 class="card-title">Leo ♌</h5>
-                <p class="card-text">Warm, generous, and charismatic.</p>
-              </div>
-            </div>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <button class="card h-100 zodiac-guide-card" type="button" data-sign="Leo" data-summary="Leo (Simha Rashi), ruled by the Sun, expresses confidence, leadership, creativity, and a strong sense of purpose." data-keywords="Leadership|Creativity|Confidence" data-bs-toggle="modal" data-bs-target="#zodiacOverviewModal" aria-haspopup="dialog" aria-controls="zodiacOverviewModal">
+              <span class="card-body"><span class="card-title">Leo</span><span class="zodiac-card-summary">Leo (Simha Rashi), ruled by the Sun, expresses confidence, leadership, creativity, and a strong sense of purpose.</span><span class="zodiac-keywords"><span>Leadership</span><span>Creativity</span><span>Confidence</span></span><span class="zodiac-overview-link">Explore Detailed Overview</span></span>
+            </button>
           </div>
-          <div class="col-md-3 mb-3">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5 class="card-title">Virgo ♍</h5>
-                <p class="card-text">Analytical, helpful, and precise.</p>
-              </div>
-            </div>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <button class="card h-100 zodiac-guide-card" type="button" data-sign="Virgo" data-summary="Virgo (Kanya Rashi), ruled by Mercury, combines practical intelligence with analysis, precision, and a drive to improve." data-keywords="Analysis|Service|Precision" data-bs-toggle="modal" data-bs-target="#zodiacOverviewModal" aria-haspopup="dialog" aria-controls="zodiacOverviewModal">
+              <span class="card-body"><span class="card-title">Virgo</span><span class="zodiac-card-summary">Virgo (Kanya Rashi), ruled by Mercury, combines practical intelligence with analysis, precision, and a drive to improve.</span><span class="zodiac-keywords"><span>Analysis</span><span>Service</span><span>Precision</span></span><span class="zodiac-overview-link">Explore Detailed Overview</span></span>
+            </button>
           </div>
-          <div class="col-md-3 mb-3">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5 class="card-title">Libra ♎</h5>
-                <p class="card-text">Balanced, social, and fair-minded.</p>
-              </div>
-            </div>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <button class="card h-100 zodiac-guide-card" type="button" data-sign="Libra" data-summary="Libra (Tula Rashi), ruled by Venus, brings diplomacy, partnership, fairness, and a desire for balance." data-keywords="Balance|Diplomacy|Partnership" data-bs-toggle="modal" data-bs-target="#zodiacOverviewModal" aria-haspopup="dialog" aria-controls="zodiacOverviewModal">
+              <span class="card-body"><span class="card-title">Libra</span><span class="zodiac-card-summary">Libra (Tula Rashi), ruled by Venus, brings diplomacy, partnership, fairness, and a desire for balance.</span><span class="zodiac-keywords"><span>Balance</span><span>Diplomacy</span><span>Partnership</span></span><span class="zodiac-overview-link">Explore Detailed Overview</span></span>
+            </button>
           </div>
-          <div class="col-md-3 mb-3">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5 class="card-title">Scorpio ♏</h5>
-                <p class="card-text">Passionate, resourceful, and deep.</p>
-              </div>
-            </div>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <button class="card h-100 zodiac-guide-card" type="button" data-sign="Scorpio" data-summary="Scorpio (Vrishchika Rashi), ruled by Mars, brings emotional depth, determination, resilience, and transformation." data-keywords="Depth|Resilience|Transformation" data-bs-toggle="modal" data-bs-target="#zodiacOverviewModal" aria-haspopup="dialog" aria-controls="zodiacOverviewModal">
+              <span class="card-body"><span class="card-title">Scorpio</span><span class="zodiac-card-summary">Scorpio (Vrishchika Rashi), ruled by Mars, brings emotional depth, determination, resilience, and transformation.</span><span class="zodiac-keywords"><span>Depth</span><span>Resilience</span><span>Transformation</span></span><span class="zodiac-overview-link">Explore Detailed Overview</span></span>
+            </button>
           </div>
-        </div>
-        <div class="row mt-3">
-          <div class="col-md-3 mb-3">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5 class="card-title">Sagittarius ♐</h5>
-                <p class="card-text">Optimistic, curious, and freedom-loving.</p>
-              </div>
-            </div>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <button class="card h-100 zodiac-guide-card" type="button" data-sign="Sagittarius" data-summary="Sagittarius (Dhanu Rashi), ruled by Jupiter, seeks wisdom, exploration, and higher meaning." data-keywords="Wisdom|Exploration|Aspiration" data-bs-toggle="modal" data-bs-target="#zodiacOverviewModal" aria-haspopup="dialog" aria-controls="zodiacOverviewModal">
+              <span class="card-body"><span class="card-title">Sagittarius</span><span class="zodiac-card-summary">Sagittarius (Dhanu Rashi), ruled by Jupiter, seeks wisdom, exploration, and higher meaning.</span><span class="zodiac-keywords"><span>Wisdom</span><span>Exploration</span><span>Aspiration</span></span><span class="zodiac-overview-link">Explore Detailed Overview</span></span>
+            </button>
           </div>
-          <div class="col-md-3 mb-3">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5 class="card-title">Capricorn ♑</h5>
-                <p class="card-text">Ambitious, disciplined, and practical.</p>
-              </div>
-            </div>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <button class="card h-100 zodiac-guide-card" type="button" data-sign="Capricorn" data-summary="Capricorn (Makara Rashi), ruled by Saturn, combines ambition, discipline, and patient effort toward long-term goals." data-keywords="Ambition|Discipline|Perseverance" data-bs-toggle="modal" data-bs-target="#zodiacOverviewModal" aria-haspopup="dialog" aria-controls="zodiacOverviewModal">
+              <span class="card-body"><span class="card-title">Capricorn</span><span class="zodiac-card-summary">Capricorn (Makara Rashi), ruled by Saturn, combines ambition, discipline, and patient effort toward long-term goals.</span><span class="zodiac-keywords"><span>Ambition</span><span>Discipline</span><span>Perseverance</span></span><span class="zodiac-overview-link">Explore Detailed Overview</span></span>
+            </button>
           </div>
-          <div class="col-md-3 mb-3">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5 class="card-title">Aquarius ♒</h5>
-                <p class="card-text">Inventive, independent, and humane.</p>
-              </div>
-            </div>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <button class="card h-100 zodiac-guide-card" type="button" data-sign="Aquarius" data-summary="Aquarius (Kumbha Rashi), ruled by Saturn, brings independence, innovation, and a systems-minded concern for communities." data-keywords="Independence|Innovation|Community" data-bs-toggle="modal" data-bs-target="#zodiacOverviewModal" aria-haspopup="dialog" aria-controls="zodiacOverviewModal">
+              <span class="card-body"><span class="card-title">Aquarius</span><span class="zodiac-card-summary">Aquarius (Kumbha Rashi), ruled by Saturn, brings independence, innovation, and a systems-minded concern for communities.</span><span class="zodiac-keywords"><span>Independence</span><span>Innovation</span><span>Community</span></span><span class="zodiac-overview-link">Explore Detailed Overview</span></span>
+            </button>
           </div>
-          <div class="col-md-3 mb-3">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5 class="card-title">Pisces ♓</h5>
-                <p class="card-text">Compassionate, artistic, and intuitive.</p>
-              </div>
-            </div>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <button class="card h-100 zodiac-guide-card" type="button" data-sign="Pisces" data-summary="Pisces (Meena Rashi), ruled by Jupiter, brings compassion, intuition, imagination, and spiritual depth." data-keywords="Compassion|Intuition|Spirituality" data-bs-toggle="modal" data-bs-target="#zodiacOverviewModal" aria-haspopup="dialog" aria-controls="zodiacOverviewModal">
+              <span class="card-body"><span class="card-title">Pisces</span><span class="zodiac-card-summary">Pisces (Meena Rashi), ruled by Jupiter, brings compassion, intuition, imagination, and spiritual depth.</span><span class="zodiac-keywords"><span>Compassion</span><span>Intuition</span><span>Spirituality</span></span><span class="zodiac-overview-link">Explore Detailed Overview</span></span>
+            </button>
           </div>
         </div>
       </section>
+
+      <div id="zodiacOverviewModal" class="modal fade zodiac-overview-modal" tabindex="-1" aria-labelledby="zodiacOverviewTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2 id="zodiacOverviewTitle" class="modal-title fs-4">Sign Overview</h2>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="zodiacOverviewBody" class="modal-body zodiac-modal-body"></div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template id="ariesOverviewContent">
+        <p><strong>Aries (Mesha Rashi)</strong> is the <strong>first sign of the Vedic zodiac</strong>, spanning <strong>0°00′ to 30°00′ of the sidereal zodiac</strong> and symbolized by the <strong>Ram</strong>. It is ruled by <strong>Mars (Mangal)</strong> and is classified as a <strong>Fire (Agni) element, Movable (Chara), masculine/odd, Rajasic and Prishtodaya (back-rising) sign</strong>, with the <strong>East</strong> as its direction and the <strong>head</strong> as its corresponding part of the Kala Purusha.</p>
+        <p>Aries represents <strong>initiative, courage, independence, action, competition, leadership, pioneering spirit and the impulse to begin</strong>, while its excessive expression can manifest as <strong>impatience, impulsiveness, aggression, haste and difficulty with sustained effort</strong>. Because Mars owns Aries, the sign carries martial qualities such as energy, drive, physical courage, decisiveness and the willingness to confront obstacles directly.</p>
+        <p>The sign contains <strong>Ashwini (4 padas), Bharani (4 padas), and Krittika (1st pada)</strong>. <strong>The Sun is exalted in Aries, with its deepest exaltation traditionally at 10°</strong>, while <strong>Saturn is debilitated, with deepest debilitation at 20°</strong>; Mars has its <strong>Moolatrikona from 0° to 12°</strong> according to the commonly used Vedic dignity scheme.</p>
+        <p>In a horoscope, Aries emphasizes the area of life where a person tends to <strong>initiate, assert, compete and take independent action</strong>; however, the actual results depend heavily on the <strong>house occupied, its lord Mars, planets placed in Aries, aspects, nakshatra/pada, dignity and the overall chart</strong> rather than the sign alone.</p>
+      </template>
+      <template id="taurusOverviewContent">
+        <p>Taurus (Vrishabha Rashi) is the second sign of the Vedic sidereal zodiac, spanning 30°00′ to 60°00′, and is symbolized by the Bull. It is ruled by Venus (Shukra) and is classified as an Earth (Prithvi) element, Fixed (Sthira), feminine/even sign associated with stability, preservation, material resources, beauty, sensuality, nourishment and the ability to build something gradually and sustain it over time.</p>
+        <p>Taurus contains Krittika padas 2–4, all four padas of Rohini, and Mrigashira padas 1–2, covering nine nakshatra padas in total. The Moon is exalted in Taurus, with its deepest exaltation traditionally at 3°, while Venus occupies its own sign here; some traditions also consider Rahu exalted and Ketu debilitated in Taurus, although the Rahu–Ketu dignity scheme varies between traditions.</p>
+        <p>In the Kalapurusha, Taurus is associated particularly with the face, mouth, throat and neck, linking the sign symbolically with speech, food, taste, voice and sensory experience. Taurus represents patience, endurance, loyalty, financial accumulation, comfort, possessions, artistic appreciation and practical productivity, while its excessive expression may appear as stubbornness, possessiveness, resistance to change, material attachment or excessive concern with comfort.</p>
+        <p>As a fixed Earth sign ruled by Venus, Taurus tends to prefer gradual development over sudden change and tangible results over abstract possibilities. In a horoscope, the actual results of Taurus depend on the house occupied, Venus's condition, planets placed in Taurus, aspects, nakshatra and pada, dignity, and the overall chart, rather than the sign alone.</p>
+      </template>
+      <template id="geminiOverviewContent">
+        <p>Gemini (Mithuna Rashi) is the third sign of the Vedic sidereal zodiac, spanning 60°00′ to 90°00′, and is symbolized by the Twins, representing duality, communication, curiosity, adaptability and the exchange of ideas. It is ruled by Mercury (Budha) and is classified as an Air (Vayu) element, Dual (Dvisvabhava), masculine/odd sign, associated with intellect, communication, learning, networking, writing, commerce and versatility.</p>
+        <p>Gemini contains Mrigashira padas 3–4, all four padas of Ardra, and Punarvasu padas 1–3, covering nine nakshatra padas in total. Mercury, as the lord of Gemini, gives the sign qualities of analytical thinking, observation, language skills, calculation, reasoning and adaptability.</p>
+        <p>Gemini is traditionally associated with the arms, shoulders, hands, lungs and nervous system in the Kalapurusha symbolism, reflecting its connection with movement, communication and interaction with the surrounding environment. The sign represents curiosity, intelligence, humour, social interaction, information gathering, experimentation and the ability to handle multiple subjects, while its excessive expression may appear as indecisiveness, restlessness, inconsistency, superficiality, overthinking or excessive mental activity.</p>
+        <p>Gemini is generally more comfortable with variety and intellectual stimulation than rigid routine, and it can adapt quickly to changing circumstances. In a horoscope, the actual results of Gemini depend on the house occupied, the condition of Mercury, planets placed in Gemini, aspects, nakshatra and pada, dignity, and the overall chart rather than the sign alone.</p>
+      </template>
+      <template id="cancerOverviewContent">
+        <p>Cancer (Karka Rashi) is the fourth sign of the Vedic sidereal zodiac, spanning 90°00′ to 120°00′, and is symbolized by the Crab. It is ruled by the Moon (Chandra) and is classified as a Water (Jala) element, Movable (Chara), feminine/even sign, associated with emotions, nurturing, protection, memory, home, family, comfort and emotional security.</p>
+        <p>Cancer contains Punarvasu pada 4, all four padas of Pushya, and all four padas of Ashlesha, making a total of nine nakshatra padas within the sign. As the Moon is the ruler of Cancer, the sign is traditionally connected with sensitivity, receptivity, intuition, imagination, emotional awareness and attachment to one's roots. Jupiter is exalted in Cancer, with its deepest exaltation traditionally at 5°, while Mars is debilitated, with its deepest debilitation traditionally at 28°.</p>
+        <p>In Kalapurusha symbolism, Cancer is associated with the chest, heart, stomach and breasts. Cancer represents nurturing, caring, emotional depth, family values, hospitality, protection, adaptability and the desire to create a secure environment, while its excessive expression may appear as moodiness, over-sensitivity, attachment, defensiveness, withdrawal or difficulty letting go of the past.</p>
+        <p>As a movable Water sign ruled by the Moon, Cancer combines emotional sensitivity with an instinct to respond, protect and initiate changes according to circumstances. In a horoscope, the actual results of Cancer depend on the house occupied, the condition of the Moon, planets placed in Cancer, aspects, nakshatra and pada, planetary dignity and the overall chart rather than the sign alone.</p>
+      </template>
+      <template id="leoOverviewContent">
+        <p>Leo (Simha Rashi) is the fifth sign of the Vedic sidereal zodiac, spanning 120°00′ to 150°00′, and is symbolized by the Lion. It is ruled by the Sun (Surya) and is classified as a Fire (Agni) element, Fixed (Sthira), masculine/odd sign, associated with authority, confidence, leadership, creativity, dignity, self-expression and a strong sense of individuality.</p>
+        <p>Leo contains all four padas of Magha, all four padas of Purva Phalguni, and the first pada of Uttara Phalguni, covering nine nakshatra padas in total. As the Sun is the ruler of Leo, the sign is traditionally associated with vitality, self-confidence, courage, independence, recognition, authority and the expression of one's inner identity. The Sun occupies its own sign in Leo, with its Moolatrikona extending from 0° to 20°.</p>
+        <p>In Kalapurusha symbolism, Leo is associated primarily with the stomach, heart and spine, connecting the sign with vitality, strength and centrality. Leo represents leadership, generosity, determination, creativity, ambition, honour and the desire to take responsibility, while its excessive expression may appear as pride, stubbornness, dominance, excessive attachment to recognition or difficulty accepting criticism.</p>
+        <p>As a fixed Fire sign ruled by the Sun, Leo tends to express its energy with consistency, conviction and a strong sense of purpose rather than constantly changing direction. In a horoscope, the actual results of Leo depend on the house occupied, the condition of the Sun, planets placed in Leo, aspects, nakshatra and pada, planetary dignity and the overall chart rather than the sign alone.</p>
+      </template>
+      <template id="virgoOverviewContent">
+        <p>Virgo (Kanya Rashi) is the sixth sign of the Vedic sidereal zodiac, spanning 150°00′ to 180°00′, and is symbolized by a maiden, traditionally depicted holding grain and a lamp. It is ruled by Mercury (Budha) and is classified as an Earth (Prithvi) element, Dual (Dvisvabhava), feminine/even sign, associated with analysis, discrimination, precision, organization, practical intelligence, service, health, craftsmanship and attention to detail.</p>
+        <p>Virgo contains Uttara Phalguni padas 2–4, all four padas of Hasta, and Chitra padas 1–2, making a total of nine nakshatra padas within the sign. Mercury, as the lord of Virgo, is exalted here with its deepest exaltation traditionally at 15°, while Venus is debilitated with its deepest debilitation at 27°. Mercury also has its Moolatrikona portion in Virgo.</p>
+        <p>In Kalapurusha symbolism, Virgo is associated primarily with the abdomen, waist and intestines, connecting the sign with digestion, refinement, purification and systematic functioning. Virgo represents practicality, intelligence, discipline, problem-solving, organization, research, communication, service and the ability to identify and correct imperfections, while its excessive expression may appear as over-analysis, worry, perfectionism, excessive criticism, indecisiveness or becoming overly focused on small details.</p>
+        <p>As a dual Earth sign ruled by Mercury, Virgo combines grounded practicality with an adaptable and analytical mind, often seeking to understand, organize and improve whatever it encounters. In a horoscope, the actual results of Virgo depend on the house occupied, the condition of Mercury, planets placed in Virgo, aspects, nakshatra and pada, planetary dignity and the overall chart rather than the sign alone.</p>
+      </template>
+      <template id="libraOverviewContent">
+        <p>Libra (Tula Rashi) is the seventh sign of the Vedic sidereal zodiac, spanning 180°00′ to 210°00′, and is symbolized by the Balance or Scales, representing harmony, equilibrium, fairness, relationships and the process of weighing different perspectives. It is ruled by Venus (Shukra) and is classified as an Air (Vayu) element, Movable (Chara), masculine/odd sign, associated with diplomacy, social interaction, aesthetics, partnerships, negotiation, justice and the pursuit of balance.</p>
+        <p>Libra contains Chitra padas 3–4, all four padas of Swati, and Vishakha padas 1–3, making a total of nine nakshatra padas within the sign. Venus, as the lord of Libra, gives the sign qualities of refinement, artistic appreciation, attraction, relationship-building, diplomacy and an interest in comfort and beauty. Saturn is exalted in Libra, with its deepest exaltation traditionally at 20°, while the Sun is debilitated, with its deepest debilitation traditionally at 10°.</p>
+        <p>In Kalapurusha symbolism, Libra is associated with the lower abdomen, kidneys, lumbar region and reproductive balance. Libra represents cooperation, partnership, diplomacy, social grace, negotiation, fairness, aesthetics and the ability to find common ground, while its excessive expression may appear as indecisiveness, people-pleasing, dependency on relationships, avoidance of confrontation or excessive concern with appearances.</p>
+        <p>As a movable Air sign ruled by Venus, Libra combines social intelligence with the desire to initiate connections, agreements and harmonious interactions. In a horoscope, the actual results of Libra depend on the house occupied, the condition of Venus, planets placed in Libra, aspects, nakshatra and pada, planetary dignity and the overall chart rather than the sign alone.</p>
+      </template>
+      <template id="scorpioOverviewContent">
+        <p>Scorpio (Vrishchika Rashi) is the eighth sign of the Vedic sidereal zodiac, spanning 210°00′ to 240°00′, and is symbolized by the Scorpion. It is ruled by Mars (Mangal) and is classified as a Water (Jala) element, Fixed (Sthira), feminine/even sign, associated with depth, intensity, determination, secrecy, transformation, resilience and the exploration of hidden subjects.</p>
+        <p>Scorpio contains Vishakha pada 4, all four padas of Anuradha, and all four padas of Jyeshtha, making a total of nine nakshatra padas within the sign. Mars, as the lord of Scorpio, gives the sign qualities of courage, strategic action, persistence, competitiveness and the ability to confront difficult situations. The Moon is debilitated in Scorpio, with its deepest debilitation traditionally at 3°, while Mars occupies its own sign; the dignity of Rahu and Ketu in Scorpio varies among different traditions.</p>
+        <p>In Kalapurusha symbolism, Scorpio is associated with the reproductive and hidden organs and is connected symbolically with processes of elimination, regeneration and transformation. Scorpio represents determination, emotional depth, research, investigation, secrecy, loyalty, crisis management and the ability to undergo profound transformation, while its excessive expression may appear as suspicion, possessiveness, secrecy, jealousy, emotional intensity or difficulty letting go.</p>
+        <p>As a fixed Water sign ruled by Mars, Scorpio combines emotional depth with concentrated willpower and tends to pursue matters beneath the surface rather than accepting superficial explanations. In a horoscope, the actual results of Scorpio depend on the house occupied, the condition of Mars, planets placed in Scorpio, aspects, nakshatra and pada, planetary dignity and the overall chart rather than the sign alone.</p>
+      </template>
+      <template id="sagittariusOverviewContent">
+        <p>Sagittarius (Dhanu Rashi) is the ninth sign of the Vedic sidereal zodiac, spanning 240°00′ to 270°00′, and is symbolized by the Archer, representing aspiration, exploration, knowledge, philosophy and the pursuit of higher meaning. It is ruled by Jupiter (Guru) and is classified as a Fire (Agni) element, Dual (Dvisvabhava), masculine/odd sign, associated with wisdom, higher learning, dharma, optimism, expansion, travel and the search for truth.</p>
+        <p>Sagittarius contains all four padas of Mula, all four padas of Purva Ashadha, and the first pada of Uttara Ashadha, making a total of nine nakshatra padas within the sign. Mula is ruled by Ketu, Purva Ashadha by Venus and Uttara Ashadha by the Sun. Jupiter, as the lord of Sagittarius, has its Moolatrikona portion from 0° to 10° and its own-sign placement throughout Sagittarius. No classical planet has its exaltation or debilitation point in Sagittarius, although traditions differ regarding the dignity of Rahu and Ketu.</p>
+        <p>In Kalapurusha symbolism, Sagittarius is associated primarily with the hips and thighs. Sagittarius represents optimism, independence, philosophical thinking, learning, teaching, adventure, exploration, generosity and the desire to understand the larger meaning behind experiences, while its excessive expression may appear as restlessness, overconfidence, bluntness, exaggeration, excessive idealism or difficulty accepting limitations.</p>
+        <p>As a dual Fire sign ruled by Jupiter, Sagittarius combines enthusiasm and initiative with a strong intellectual and philosophical orientation, often encouraging the pursuit of knowledge, principles and broader horizons. In a horoscope, the actual results of Sagittarius depend on the house occupied, the condition of Jupiter, planets placed in Sagittarius, aspects, nakshatra and pada, planetary dignity and the overall chart rather than the sign alone.</p>
+      </template>
+      <template id="capricornOverviewContent">
+        <p>Capricorn (Makara Rashi) is the tenth sign of the Vedic sidereal zodiac, spanning 270°00′ to 300°00′, and is symbolized by the Sea-Goat, representing ambition, discipline, responsibility, structure and the gradual achievement of long-term goals. It is ruled by Saturn (Shani) and is classified as an Earth (Prithvi) element, Movable (Chara), feminine/even sign, associated with perseverance, practicality, organization, duty, authority and sustained effort.</p>
+        <p>Capricorn contains Uttara Ashadha padas 2–4, all four padas of Shravana, and Dhanishta padas 1–2, making a total of nine nakshatra padas within the sign. Saturn, as the ruler of Capricorn, gives the sign qualities of discipline, patience, endurance, responsibility and the ability to work steadily toward tangible objectives. Mars is exalted in Capricorn, with its deepest exaltation traditionally at 28°, while Jupiter is debilitated, with its deepest debilitation traditionally at 5°.</p>
+        <p>In Kalapurusha symbolism, Capricorn is associated primarily with the knees and skeletal structure, reflecting themes of support, endurance and movement through sustained effort. Capricorn represents ambition, persistence, realism, organizational ability, professional responsibility, material achievement and respect for established structures, while its excessive expression may appear as rigidity, pessimism, excessive seriousness, workaholism, emotional restraint or an overly strong focus on status and achievement.</p>
+        <p>As a movable Earth sign ruled by Saturn, Capricorn combines practical action with patience and long-term planning, often preferring measurable progress over immediate results. In a horoscope, the actual results of Capricorn depend on the house occupied, the condition of Saturn, planets placed in Capricorn, aspects, nakshatra and pada, planetary dignity and the overall chart rather than the sign alone.</p>
+      </template>
+      <template id="aquariusOverviewContent">
+        <p>Aquarius (Kumbha Rashi) is the eleventh sign of the Vedic sidereal zodiac, spanning 300°00′ to 330°00′, and is symbolized by the Water-Bearer, representing the distribution of knowledge, ideas, resources and collective experiences. It is ruled by Saturn (Shani) and is classified as an Air (Vayu) element, Fixed (Sthira), masculine/odd sign, associated with intellect, independence, social networks, innovation, humanitarian interests, systems and broader collective concerns.</p>
+        <p>Aquarius contains Dhanishta padas 3–4, all four padas of Shatabhisha, and Purva Bhadrapada padas 1–3, making a total of nine nakshatra padas within the sign. Saturn, as the ruler of Aquarius, gives the sign qualities of discipline, perseverance, detachment, practicality and concern with larger structures and systems. In traditional Vedic astrology, Saturn occupies its own sign in Aquarius, while the exaltation and debilitation dignities of other planets depend on their respective placements; Rahu and Ketu dignities in Aquarius vary among different traditions.</p>
+        <p>In Kalapurusha symbolism, Aquarius is associated primarily with the calves and lower legs, reflecting themes of movement, support and circulation. Aquarius represents independence, intellectual exploration, social awareness, originality, networking, long-term thinking and interest in systems that affect groups or communities, while its excessive expression may appear as emotional detachment, stubbornness, unconventionality for its own sake, isolation or difficulty adapting to established norms.</p>
+        <p>As a fixed Air sign ruled by Saturn, Aquarius combines intellectual breadth with persistence and tends to approach problems through principles, systems and long-term perspectives. In a horoscope, the actual results of Aquarius depend on the house occupied, the condition of Saturn, planets placed in Aquarius, aspects, nakshatra and pada, planetary dignity and the overall chart rather than the sign alone.</p>
+      </template>
+      <template id="piscesOverviewContent">
+        <p>Pisces (Meena Rashi) is the twelfth and final sign of the Vedic sidereal zodiac, spanning 330°00′ to 360°00′, and is symbolized by two fish moving in opposite directions, representing duality, sensitivity, imagination, compassion, spirituality and the completion of a cycle. It is ruled by Jupiter (Guru) and is classified as a Water (Jala) element, Dual (Dvisvabhava), feminine/even sign, associated with intuition, wisdom, faith, creativity, empathy, surrender and the search for deeper meaning.</p>
+        <p>Pisces contains the fourth pada of Purva Bhadrapada, all four padas of Uttara Bhadrapada, and all four padas of Revati, making a total of nine nakshatra padas within the sign. Jupiter, as the lord of Pisces, gives the sign qualities of wisdom, compassion, spirituality, generosity and an inclination toward higher knowledge. Venus is exalted in Pisces, with its deepest exaltation traditionally at 27°, while Mercury is debilitated, with its deepest debilitation traditionally at 15°.</p>
+        <p>In Kalapurusha symbolism, Pisces is associated primarily with the feet, representing the completion of the zodiacal journey and movement toward release. Pisces represents compassion, imagination, intuition, spirituality, artistic sensitivity, adaptability, selflessness and the ability to perceive subtle or emotional dimensions of life, while its excessive expression may appear as escapism, confusion, over-sensitivity, lack of boundaries, indecisiveness or difficulty dealing with practical realities.</p>
+        <p>As a dual Water sign ruled by Jupiter, Pisces combines emotional depth with philosophical and spiritual inclination, often seeking meaning beyond immediate material concerns. In a horoscope, the actual results of Pisces depend on the house occupied, the condition of Jupiter, planets placed in Pisces, aspects, nakshatra and pada, planetary dignity and the overall chart rather than the sign alone.</p>
+      </template>
     </main>
 
-    <footer class="text-center py-4">
-      <small>Local demo — not a professional astrology service.</small>
-    </footer>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+    <script src="/chart-renderer.js?v=chart-east-1"></script>
+    <script src="/i18n.js?v=locale-7"></script>
+    <script src="/app.js?v=chart-aspects-1"></script>
   </body>
 </html>
