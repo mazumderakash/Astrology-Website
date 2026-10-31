@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000" font-family="Arial, sans-serif">
+  <defs>
+    <style>
+      .ring-border { fill: none; stroke: #d4af37; stroke-width: 2; }
+      .sector-border { fill: none; stroke: #d4af37; stroke-width: 1.5; }
+      .outer-text { font-size: 28px; font-weight: bold; fill: #111111; text-anchor: middle; dominant-baseline: middle; }
+      .nakshatra-text { font-size: 13px; font-weight: 600; fill: #111111; text-anchor: middle; dominant-baseline: middle; }
+      .tara-text { font-size: 20px; font-weight: bold; fill: #111111; text-anchor: middle; dominant-baseline: middle; }
+      .center-title { font-size: 26px; font-weight: bold; fill: #111111; text-anchor: middle; dominant-baseline: middle; }
+    </style>
+  </defs>
+  <g transform="translate(500,500)">
+    <g class="outer-orbit">
+    <circle r="490" fill="#fcf8ed" class="ring-border" />
+    <circle r="370" fill="#ffffff" class="ring-border" />
+    <line x1="0" y1="-370" x2="0" y2="-490" class="sector-border" transform="rotate(20)" />
+    <line x1="0" y1="-370" x2="0" y2="-490" class="sector-border" transform="rotate(60)" />
+    <line x1="0" y1="-370" x2="0" y2="-490" class="sector-border" transform="rotate(100)" />
+    <line x1="0" y1="-370" x2="0" y2="-490" class="sector-border" transform="rotate(140)" />
+    <line x1="0" y1="-370" x2="0" y2="-490" class="sector-border" transform="rotate(180)" />
+    <line x1="0" y1="-370" x2="0" y2="-490" class="sector-border" transform="rotate(220)" />
+    <line x1="0" y1="-370" x2="0" y2="-490" class="sector-border" transform="rotate(260)" />
+    <line x1="0" y1="-370" x2="0" y2="-490" class="sector-border" transform="rotate(300)" />
+    <line x1="0" y1="-370" x2="0" y2="-490" class="sector-border" transform="rotate(340)" />
+    <line x1="0" y1="-240" x2="0" y2="-370" class="sector-border" transform="rotate(20)" />
+    <line x1="0" y1="-240" x2="0" y2="-370" class="sector-border" transform="rotate(60)" />
+    <line x1="0" y1="-240" x2="0" y2="-370" class="sector-border" transform="rotate(100)" />
+    <line x1="0" y1="-240" x2="0" y2="-370" class="sector-border" transform="rotate(140)" />
+    <line x1="0" y1="-240" x2="0" y2="-370" class="sector-border" transform="rotate(180)" />
+    <line x1="0" y1="-240" x2="0" y2="-370" class="sector-border" transform="rotate(220)" />
+    <line x1="0" y1="-240" x2="0" y2="-370" class="sector-border" transform="rotate(260)" />
+    <line x1="0" y1="-240" x2="0" y2="-370" class="sector-border" transform="rotate(300)" />
+    <line x1="0" y1="-240" x2="0" y2="-370" class="sector-border" transform="rotate(340)" />
+    <g transform="translate(0, -305)">
+      <text x="0" y="-18" class="nakshatra-text">Ashwini</text>
+      <text x="0" y="0" class="nakshatra-text">Magha</text>
+      <text x="0" y="18" class="nakshatra-text">Mula</text>
+    </g>
+    <g transform="translate(196, -233)">
+      <text x="0" y="-18" class="nakshatra-text">Bharani</text>
+      <text x="0" y="0" class="nakshatra-text">P Phalguni</text>
+      <text x="0" y="18" class="nakshatra-text">Ashadha</text>
+    </g>
+    <g transform="translate(300, -53)">
+      <text x="0" y="-18" class="nakshatra-text">Krittika</text>
+      <text x="0" y="0" class="nakshatra-text">U Phalguni</text>
+      <text x="0" y="18" class="nakshatra-text">U Ashadha</text>
+    </g>
+    <g transform="translate(264, 152)">
+      <text x="0" y="-18" class="nakshatra-text">Rohini</text>
+      <text x="0" y="0" class="nakshatra-text">Hasta</text>
+      <text x="0" y="18" class="nakshatra-text">Shravana</text>
+    </g>
+    <g transform="translate(104, 286)">
+      <text x="0" y="-18" class="nakshatra-text">Mrigashira</text>
+      <text x="0" y="0" class="nakshatra-text">Chitra</text>
+      <text x="0" y="18" class="nakshatra-text">Dhanishta</text>
+    </g>
+    <g transform="translate(-104, 286)">
+      <text x="0" y="-18" class="nakshatra-text">Ardra</text>
+      <text x="0" y="0" class="nakshatra-text">Swati</text>
+      <text x="0" y="18" class="nakshatra-text">Shatabhisha</text>
+    </g>
+    <g transform="translate(-264, 152)">
+      <text x="0" y="-18" class="nakshatra-text">Punarvasu</text>
+      <text x="0" y="0" class="nakshatra-text">Vishakha</text>
+      <text x="0" y="18" class="nakshatra-text">P Bhadrapada</text>
+    </g>
+    <g transform="translate(-300, -53)">
+      <text x="0" y="-18" class="nakshatra-text">Pushya</text>
+      <text x="0" y="0" class="nakshatra-text">Anuradha</text>
+      <text x="0" y="18" class="nakshatra-text">U Bhadrapada</text>
+    </g>
+    <g transform="translate(-196, -233)">
+      <text x="0" y="-18" class="nakshatra-text">Ashlesha</text>
+      <text x="0" y="0" class="nakshatra-text">Jyeshtha</text>
+      <text x="0" y="18" class="nakshatra-text">Revati</text>
+    </g>
+    <text x="0" y="-430" class="outer-text">KETU</text>
+    <text x="276" y="-329" class="outer-text" transform="rotate(40, 276, -329)">VENUS</text>
+    <text x="423" y="-74" class="outer-text" transform="rotate(80, 423, -74)">SUN</text>
+    <text x="372" y="215" class="outer-text" transform="rotate(120, 372, 215)">MOON</text>
+    <text x="147" y="404" class="outer-text" transform="rotate(160, 147, 404)">MARS</text>
+    <text x="-147" y="404" class="outer-text" transform="rotate(200, -147, 404)">RAHU</text>
+    <text x="-372" y="215" class="outer-text" transform="rotate(240, -372, 215)">JUPITER</text>
+    <text x="-423" y="-74" class="outer-text" transform="rotate(280, -423, -74)">SATURN</text>
+    <text x="-276" y="-329" class="outer-text" transform="rotate(320, -276, -329)">MERCURY</text>
+    </g>
+    <circle r="240" fill="#ffffff" class="ring-border" />
+    <g>
+    <path d="M 0 0 L -82 -226 A 240 240 0 0 1 82 -226 Z" fill="#d0e1f9" />
+    <path d="M 0 0 L 82 -226 A 240 240 0 0 1 207 -120 Z" fill="#c8e6c9" />
+    <path d="M 0 0 L 207 -120 A 240 240 0 0 1 236 41 Z" fill="#ffcdd2" />
+    <path d="M 0 0 L 236 41 A 240 240 0 0 1 154 183 Z" fill="#c8e6c9" />
+    <path d="M 0 0 L 154 183 A 240 240 0 0 1 0 240 Z" fill="#ffcdd2" />
+    <path d="M 0 0 L 0 240 A 240 240 0 0 1 -154 183 Z" fill="#c8e6c9" />
+    <path d="M 0 0 L -154 183 A 240 240 0 0 1 -236 41 Z" fill="#ffcdd2" />
+    <path d="M 0 0 L -236 41 A 240 240 0 0 1 -207 -120 Z" fill="#c8e6c9" />
+    <path d="M 0 0 L -207 -120 A 240 240 0 0 1 -82 -226 Z" fill="#c8e6c9" />
+    <circle r="130" fill="#fcf8ed" class="ring-border" />
+    <line x1="0" y1="-130" x2="0" y2="-240" class="sector-border" transform="rotate(20)" />
+    <line x1="0" y1="-130" x2="0" y2="-240" class="sector-border" transform="rotate(60)" />
+    <line x1="0" y1="-130" x2="0" y2="-240" class="sector-border" transform="rotate(100)" />
+    <line x1="0" y1="-130" x2="0" y2="-240" class="sector-border" transform="rotate(140)" />
+    <line x1="0" y1="-130" x2="0" y2="-240" class="sector-border" transform="rotate(180)" />
+    <line x1="0" y1="-130" x2="0" y2="-240" class="sector-border" transform="rotate(220)" />
+    <line x1="0" y1="-130" x2="0" y2="-240" class="sector-border" transform="rotate(260)" />
+    <line x1="0" y1="-130" x2="0" y2="-240" class="sector-border" transform="rotate(300)" />
+    <line x1="0" y1="-130" x2="0" y2="-240" class="sector-border" transform="rotate(340)" />
+    <text x="0" y="-18" class="center-title">NAVATARA</text>
+    <text x="0" y="18" class="center-title">CHAKRA</text>
+    <text x="0" y="-185" class="tara-text">Janma</text>
+    <text x="119" y="-142" class="tara-text">Sampat</text>
+    <text x="182" y="-32" class="tara-text">Vipat</text>
+    <text x="160" y="92" class="tara-text">Kshema</text>
+    <text x="63" y="174" class="tara-text">Pratyari</text>
+    <text x="-63" y="174" class="tara-text">Sadhaka</text>
+    <text x="-160" y="92" class="tara-text">Nidhana</text>
+    <text x="-182" y="-32" class="tara-text">Mitra</text>
+    <text x="-119" y="-142" class="tara-text">Ati Mitra</text>
+    </g>
+  </g>
+</svg>

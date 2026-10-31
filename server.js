@@ -1,7 +1,10 @@
 const express = require('express');
+const http = require('http');
+const https = require('https');
 const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
+const flaskApiUrl = new URL(process.env.FLASK_API_URL || 'http://127.0.0.1:5001');
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -61,6 +64,27 @@ app.get('/api/horoscope', (req, res) => {
   const list = horoscopes[zodiac] || horoscopes['aries'];
   const text = list[Math.floor(Math.random() * list.length)];
   res.json({ zodiac, text });
+});
+
+app.use('/api', (req, res) => {
+  const targetUrl = new URL(req.originalUrl, flaskApiUrl);
+  const transport = targetUrl.protocol === 'https:' ? https : http;
+  const proxyRequest = transport.request(targetUrl, {
+    method: req.method,
+    headers: { ...req.headers, host: targetUrl.host }
+  }, upstreamResponse => {
+    res.writeHead(upstreamResponse.statusCode || 502, upstreamResponse.headers);
+    upstreamResponse.pipe(res);
+  });
+
+  proxyRequest.on('error', error => {
+    console.error(`Flask API proxy failed: ${error.message}`);
+    if (!res.headersSent) {
+      res.status(502).json({ success: false, error: 'The application API is unavailable. Start the Flask server and try again.' });
+    }
+  });
+
+  req.pipe(proxyRequest);
 });
 
 app.listen(port, () => {
