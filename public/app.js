@@ -2091,9 +2091,8 @@ function showSection(id) {
     link.classList.toggle('active', isActive);
   });
   history.replaceState(null, '', `#${id}`);
-  if (target && typeof target.scrollIntoView === 'function') {
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+  // Each menu item swaps the whole page, so show it from the very top instead of aligning the section under the sticky header.
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 }
 
 const siteSearchDialog = document.getElementById('siteSearchDialog');
@@ -7774,6 +7773,21 @@ document.addEventListener('jyotishlab:chart-error', (event) => {
 
 const consultForm = document.getElementById('consultForm');
 const consultResult = document.getElementById('consultResult');
+const consultMessageField = document.getElementById('consultMessage');
+const consultCount = document.getElementById('consultCount');
+if (consultMessageField && consultCount) {
+  const updateConsultCount = () => { consultCount.textContent = `${consultMessageField.value.length} / 500`; };
+  consultMessageField.addEventListener('input', updateConsultCount);
+  consultForm?.addEventListener('reset', () => setTimeout(updateConsultCount, 0));
+}
+document.querySelectorAll('.consult-area').forEach((button) => {
+  button.addEventListener('click', () => {
+    const typeField = document.getElementById('consultType');
+    if (typeField) typeField.value = button.dataset.consultType;
+    document.querySelectorAll('.consult-area').forEach((item) => item.classList.toggle('is-selected', item === button));
+    document.getElementById('consultName')?.focus({ preventScroll: true });
+  });
+});
 if (consultForm) {
   consultForm.addEventListener('submit', async (event) => {
     event.preventDefault();

@@ -341,6 +341,7 @@
   }
 
   function updateUrl() {
+    if (page.classList.contains('d-none') || !page.classList.contains('show')) return;
     const url = new URL(window.location.href);
     if (selectedFestival) url.searchParams.set('festival', selectedFestival.id);
     url.searchParams.set('year', controls.year.value);
